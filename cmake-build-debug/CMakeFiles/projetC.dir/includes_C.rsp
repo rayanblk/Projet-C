@@ -1,0 +1,1 @@
+-IC:/MinGW/include/gtk-3.0 -IC:/MinGW/include/cairo -IC:/MinGW/include/pango-1.0 -IC:/MinGW/include/atk-1.0 -IC:/MinGW/include/pixman-1 -IC:/MinGW/include -IC:/MinGW/include/freetype2 -IC:/MinGW/include/libpng15 -IC:/MinGW/include/gdk-pixbuf-2.0 -IC:/MinGW/include/glib-2.0 -IC:/MinGW/lib/glib-2.0/include 

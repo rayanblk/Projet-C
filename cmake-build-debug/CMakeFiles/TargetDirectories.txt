@@ -1,0 +1,3 @@
+C:/Users/sambenitah/CLionProjects/projetC/cmake-build-debug/CMakeFiles/projetC.dir
+C:/Users/sambenitah/CLionProjects/projetC/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/sambenitah/CLionProjects/projetC/cmake-build-debug/CMakeFiles/rebuild_cache.dir
