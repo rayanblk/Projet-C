@@ -1,57 +1,89 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
+#include <string.h>
 #include "sqlite3.h"
+#include "callback.h"
 
-void OnDestroy(GtkWidget *pWidget, gpointer pData);
+int main(int argc,char **argv) {
+    GtkWidget *mainWindow;
+    GtkWidget *button;
+    GtkBuilder *mainWindowBuilder;
+    GError * errorMessage = NULL;
+    GList * allNotebookParam = NULL;
 
-int main(int argc,char **argv)
-{
-    /* SQL Widget */
-    sqlite3 * db;
-    char * errorMessage = NULL;
-    int returnCode;
-    sqlite3_stmt * query;
+    gtk_init(&argc, &argv);
 
-    /* Déclaration du widget */
-    GtkWidget *pWindow;
-    GtkBuilder * pBuidler = NULL;
-    GError *pError = NULL;
-    gtk_init(&argc,&argv);
+    mainWindowBuilder = gtk_builder_new();
 
-    /* Création de la fenêtre */
-    /*
-    pWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    /* Connexion du signal "destroy" */
+    gtk_builder_add_from_file(mainWindowBuilder, "mainWindow.glade", &errorMessage);
 
-    pBuidler = gtk_builder_new();
+    if(errorMessage == NULL){
+        /*
+         * Get the main window, via the glade file
+         */
+        mainWindow = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "mainWindow");
+        gtk_window_maximize(GTK_WINDOW(mainWindow));
 
-    if(pBuidler != NULL){
-        gtk_builder_add_from_file(pBuidler, "mainWindow.glade", & pError);
+        g_signal_connect(mainWindow, "destroy", G_CALLBACK(destroyWindow), NULL);
 
-        if(pError == NULL){
-            pWindow = (GtkWidget * ) gtk_builder_get_object(pBuidler, "window1");
+        /*
+         * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
+         * Get the League details button, via glade file
+         * Connect the clicked action, to the add tab to notebook function, with the init structure
+         */
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "leagueTab", "League", "mainTabWidget/leagueTabContent.glade", &allNotebookParam);
 
-            g_signal_connect(G_OBJECT(pWindow), "destroy", G_CALLBACK(OnDestroy), NULL);
-            /* Affichage de la fenêtre */
-            gtk_widget_show_all(pWindow);
+        button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageLeagueButton");
 
-        }else{
-            return 0;
-        }
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_last(allNotebookParam)->data);
 
+        /*
+         * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
+         * Get the team details button, via glade file
+         * Connect the clicked action, to the add tab to notebook function, with the init structure
+         */
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "teamTab", "Team", "mainTabWidget/teamTabContent.glade", &allNotebookParam);
+
+        button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageTeamButton");
+
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_last(allNotebookParam)->data);
+
+        /*
+         * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
+         * Get the player details button, via glade file
+         * Connect the clicked action, to the add tab to notebook function, with the init structure
+         */
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "playerTab", "Player", "mainTabWidget/playerTabContent.glade", &allNotebookParam);
+
+        button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManagePlayerButton");
+
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_last(allNotebookParam)->data);
+
+        /*
+         * Show all child widget of main Window
+         */
+        gtk_widget_show_all(mainWindow);
+
+        /*
+         * Enter in gtk main loop
+         */
         gtk_main();
+
+        /*
+         * Free the GList of button
+         */
+        g_list_free(allNotebookParam);
+
+        return 0;
+    }else{
+        /*
+         * If builder add from file, failed,
+         * Free the error variable
+         * Stop the code execution
+         */
+        g_error_free(errorMessage);
+
+        return 0;
     }
-
-
-
-
-
-    return 0;
-}
-
-void OnDestroy(GtkWidget *pWidget, gpointer pData)
-{
-    /* Arret de la boucle evenementielle */
-    gtk_main_quit();
 }
