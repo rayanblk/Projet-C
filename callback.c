@@ -41,10 +41,12 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
 
         if(errorMessage){
             g_error_free(errorMessage);
+
+            return;
         }else{
 
             /*
-             * Create a nem box, to put label and leave button
+             * Create a new box, to put label and leave button
              * Put first, the label, with the name in the structure received
              */
             box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
@@ -64,7 +66,7 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
                     ,NULL));
             gtk_button_set_image(GTK_BUTTON(buttonClose), image);
 
-            g_signal_connect(G_OBJECT(buttonClose), "clicked", G_CALLBACK(closeNotebookTab), data);
+            g_signal_connect(G_OBJECT(buttonClose), "clicked", G_CALLBACK(closeNotebookTab), (gpointer) data);
 
             gtk_box_pack_start(GTK_BOX(box), buttonClose, TRUE, TRUE, 0);
 
@@ -88,6 +90,10 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
             gtk_notebook_append_page(GTK_NOTEBOOK(mainNotebook), mainNotebookContent, box);
 
             gtk_notebook_set_current_page(GTK_NOTEBOOK(mainNotebook), -1);
+
+            g_signal_connect(gtk_builder_get_object(tabBuilder, "nameEntry"), "activate", G_CALLBACK(test), NULL);
+
+            initTreeView(mainNotebookContent, functionCallbackParam);
 
             /*
              * Display all the widget contained in the box label
@@ -117,6 +123,14 @@ void closeNotebookTab(GtkWidget * widget, gpointer * data){
 
     mainNotebookContent = findChild(mainNotebook, (char *) functionCallbackParam->objectName);
 
-    gtk_notebook_remove_page(GTK_NOTEBOOK(mainNotebook), gtk_notebook_page_num(GTK_NOTEBOOK(mainNotebook), mainNotebookContent));
+    if(mainNotebookContent != NULL){
+        gtk_notebook_remove_page(GTK_NOTEBOOK(mainNotebook), gtk_notebook_page_num(GTK_NOTEBOOK(mainNotebook), mainNotebookContent));
+    }
+
+}
+
+
+void test(GtkWidget * widget, gpointer * data){
+    printf("%s \n", gtk_entry_get_text(GTK_ENTRY(widget)));
 }
 
