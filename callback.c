@@ -16,12 +16,15 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
     GtkWidget * image;
     GtkBuilder * tabBuilder;
     GError * errorMessage = NULL;
+    void (*pointer) (GtkWidget *, CallbackParam *);
 
     /*
      * Get the structure, pass on param
      */
     CallbackParam * functionCallbackParam = (CallbackParam *) data;
 
+
+    pointer = functionCallbackParam->function;
     /*
      * With the builder in the structure, find the main Notebook main
      */
@@ -91,9 +94,21 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
 
             gtk_notebook_set_current_page(GTK_NOTEBOOK(mainNotebook), -1);
 
-            g_signal_connect(gtk_builder_get_object(tabBuilder, "nameEntry"), "activate", G_CALLBACK(test), NULL);
+            //g_signal_connect(gtk_builder_get_object(tabBuilder, "nameEntry"), "activate", G_CALLBACK(test), NULL);
 
-            initTreeView(mainNotebookContent, functionCallbackParam);
+
+            if(pointer != NULL){
+                CallbackParam * test = (CallbackParam *) malloc(sizeof(CallbackParam));
+                test->mainParam = functionCallbackParam->mainParam;
+                test->function = functionCallbackParam->function;
+                strcpy((char *) test->objectName, (char *) functionCallbackParam->objectName);
+                strcpy((char *) test->parentName, (char *) functionCallbackParam->parentName);
+                strcpy((char *) test->objectLabel, (char *) functionCallbackParam->objectLabel);
+                strcpy((char *) test->fileName, (char *) functionCallbackParam->fileName);
+                test->builder = tabBuilder;
+                (*pointer)(mainNotebookContent, test);
+            }
+
 
             /*
              * Display all the widget contained in the box label
@@ -130,7 +145,136 @@ void closeNotebookTab(GtkWidget * widget, gpointer * data){
 }
 
 
-void test(GtkWidget * widget, gpointer * data){
-    printf("%s \n", gtk_entry_get_text(GTK_ENTRY(widget)));
+
+void leagueTabFormSearch(GtkWidget * widget, gpointer * data){
+
+    GtkWidget * allEntry[3];
+    CallbackParam * mainParam = (CallbackParam *) data;
+    char allCondition[3][200] = {{0}};
+    char statement[500] = {0};
+    char * param[3] = {0};
+    char buffer[200] = {0};
+    char *temp;
+    GtkListStore * listStore = NULL;
+    GtkTreeIter tempIter;
+    int numberOfElement = 0, i = 0;
+    char *** finalData = NULL;
+    PrepareStatement * query;
+    QueryStatement * queryExecute;
+
+    /*
+     * Get all entry :
+     */
+    allEntry[0] = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "leagueTabIdEntry");
+    allEntry[1] = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "leagueTabNameEntry");
+    allEntry[2] = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "leagueTabSeasonEntry");
+
+
+
+    /*
+     * If the user enter an element on ID field
+     */
+    if(strlen(param[numberOfElement] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[0]))) > 0){
+        sprintf(allCondition[numberOfElement], "id = $%d", numberOfElement + 1);
+        numberOfElement++;
+    }
+
+    /*
+     * If the user enter an element on name field
+     * We want to do LIKE, so need to put the %
+     * Duplicate the entry text buffer
+     * Add the % on a temp variable
+     */
+    if(strlen(param[numberOfElement] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[1]))) > 0){
+        sprintf(allCondition[numberOfElement], "name LIKE $%d", numberOfElement + 1);
+
+        temp = g_strdup(param[numberOfElement]);
+        strcpy(buffer, "%");
+        strcat(buffer, temp);
+        strcat(buffer, "%");
+        strcpy(temp, buffer);
+        param[numberOfElement] = temp;
+        numberOfElement++;
+    }
+
+    /*
+     * Empty the buffer
+     */
+    strcpy(buffer, "");
+
+    /*
+     * Prepare the statement
+     */
+    strcpy(statement, "SELECT id, name, to_char(\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\" FROM \"League\"");
+
+    /*
+     * Make an implode of all condition array
+     */
+    for (int j = 0; j < numberOfElement; ++j) {
+
+        if(j != 0){
+            strcat(buffer, " AND ");
+        }
+        strcat(buffer, allCondition[j]);
+    }
+
+    /*
+     * Add the where to the statement, only if field are selected
+     */
+    if(numberOfElement > 0)
+        strcat(statement, " WHERE ");
+
+    /*
+     * Concat buffer to statements
+     */
+    strcat(statement, buffer);
+
+    /*
+     * Prepare the query
+     * Bind all the value
+     * Execute the prepare statement
+     * Get the return
+     */
+    query = prepareQuery(mainParam->mainParam->databaseInfo, statement);
+
+    for (int j = 0; j < numberOfElement; ++j) {
+        bindParam(query, param[j], numberOfElement);
+    }
+
+    queryExecute = executePrepareStatement(query);
+
+    fetchAllResult(queryExecute, &finalData);
+
+    /*
+     * Get the list store
+     * Empty if
+     * Add new value
+     */
+    listStore = (GtkListStore *) gtk_builder_get_object(mainParam->builder, "leagueListStore");
+
+    if(listStore != NULL){
+        gtk_list_store_clear(listStore);
+    }
+
+    for (int k = 0; k < queryExecute->numberOfrow; ++k) {
+        gtk_list_store_append(listStore, &tempIter);
+        gtk_list_store_set(listStore, &tempIter
+                , 0, finalData[k][0]
+                , 1, finalData[k][1]
+                , 2, finalData[k][2]
+                , -1);
+    }
 }
 
+void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
+
+    CallbackParam * mainParam = (CallbackParam *) data;
+    GtkWidget * window;
+    GtkBuilder * builder;
+
+    loadGladeFile(&builder, "formWidget/newLeagueForm.glade");
+
+    window = (GtkWidget *) gtk_builder_get_object(builder, "leagueAddForm");
+
+    gtk_widget_show_all(window);
+}

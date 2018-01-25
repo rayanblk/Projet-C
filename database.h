@@ -6,6 +6,7 @@
 #define PROJET_C_DATABASE_H
 
 #include <libpq-fe.h>
+#include <gtk/gtk.h>
 
 /*
  * All parameters for connection to database
@@ -26,14 +27,21 @@ typedef struct QueryStatement{
     int numberOfcolumn;
     int activeRow;
     int error;
+    int fetchType;
 } QueryStatement;
 
+typedef struct PrepareStatement{
+    char * query;
+    GList * allParam;
+    int error;
+    DatabaseConnector * connector;
+} PrepareStatement;
 
-typedef struct Result{
+/*typedef struct Result{
     char *** finalData;
     int row;
     int column;
-} Result;
+} Result;*/
 
 DatabaseConnector * connectToDatabase(char * connectionParam);
 
@@ -41,10 +49,18 @@ void endConnectionToDatabase(DatabaseConnector * databaseConnector);
 
 QueryStatement * query(DatabaseConnector * databaseConnector, char * statement);
 
-void closeQuery(QueryStatement * queryData, char *** data);
+PrepareStatement * prepareQuery(DatabaseConnector * databaseConnector, char * statement);
+
+QueryStatement * executePrepareStatement(PrepareStatement * prepareStatement);
+
+void bindParam(PrepareStatement * prepareStatement, char * param, int position);
 
 void fetchResult(QueryStatement * query, char *** dataArray);
 
 void fetchAllResult(QueryStatement * query, char **** dataArray);
+
+void closeQuery(QueryStatement * queryData, char *** data);
+
+void closePrepareStatement(PrepareStatement * prepareData, QueryStatement * queryData, char *** finalData);
 
 #endif //PROJET_C_DATABASE_H

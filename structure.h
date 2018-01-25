@@ -19,6 +19,7 @@ typedef struct CallbackParam {
     char * objectName[250];
     char * objectLabel[250];
     char * fileName[250];
+    void * function;
     MainParam * mainParam;
 } CallbackParam;
 

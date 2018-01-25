@@ -10,8 +10,7 @@ int main(int argc,char **argv) {
     GError * errorMessage = NULL;
     GList * allNotebookParam = NULL;
     MainParam * mainParam = (MainParam *) malloc(sizeof(MainParam));
-    const char * param[2];
-    char * connInfo = "host=localhost port=5432 dbname=LeagueManager user=mathieu password=toshiba26";
+    char * connInfo = "host=193.70.86.174 port=5432 dbname=projetc user=application password=root";
     DatabaseConnector * mainDatabaseConnector = NULL;
     gtk_init(&argc, &argv);
 
@@ -48,36 +47,37 @@ int main(int argc,char **argv) {
          * Get the League details button, via glade file
          * Connect the clicked action, to the add tab to notebook function, with the init structure
          */
-        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "leagueTab", "League", "mainTabWidget/leagueTabContent.glade", &allNotebookParam, mainParam);
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "leagueTab", "League", "mainTabWidget/leagueTabContent.glade", initLeagueTreeView, &allNotebookParam, mainParam);
 
         button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageLeagueButton");
 
         if(button != NULL)
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_last(allNotebookParam)->data);
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
 
         /*
          * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
          * Get the team details button, via glade file
          * Connect the clicked action, to the add tab to notebook function, with the init structure
          */
-        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "teamTab", "Team", "mainTabWidget/teamTabContent.glade", &allNotebookParam, mainParam);
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "teamTab", "Team", "mainTabWidget/teamTabContent.glade", initTeamTreeView, &allNotebookParam, mainParam);
 
         button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageTeamButton");
 
         if(button != NULL)
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_last(allNotebookParam)->data);
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
 
         /*
          * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
          * Get the player details button, via glade file
          * Connect the clicked action, to the add tab to notebook function, with the init structure
          */
-        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "playerTab", "Player", "mainTabWidget/playerTabContent.glade", &allNotebookParam, mainParam);
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "playerTab", "Player", "mainTabWidget/playerTabContent.glade", NULL, &allNotebookParam, mainParam);
 
         button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManagePlayerButton");
 
         if(button != NULL)
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_last(allNotebookParam)->data);
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
+
 
         /*
          * Show all child widget of main Window

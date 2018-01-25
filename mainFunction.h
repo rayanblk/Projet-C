@@ -16,8 +16,10 @@ GError * loadGladeFile(GtkBuilder ** builder, char *fileName);
 
 GtkWidget* findChild(GtkWidget * parent, const gchar * name);
 
-CallbackParam * initAddNotebookTabButton(GtkBuilder * builder, char * parentName, char * objectName, char * objectLabel, char * fileName, GList ** list, MainParam * MainParam);
+CallbackParam * initAddNotebookTabButton(GtkBuilder * builder, char * parentName, char * objectName, char * objectLabel, char * fileName, void * function, GList ** list, MainParam * MainParam);
 
-void initTreeView(GtkWidget * parentBox, CallbackParam * data);
+void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data);
+
+void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data);
 
 #endif //PROJET_C_MAINFUNCTION_H
