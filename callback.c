@@ -457,12 +457,11 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
         query =  prepareQuery(allparam->mainParam->databaseInfo,statement);
         bindParam(query,param,0);
         queryResult = executePrepareStatement(query);
-        queryResult->error = 1;
 
         if(queryResult->error == 1){
-            if((label = findChild(currentBox, "errorInsertName")) == NULL) {
+            if((label = findChild(currentBox, "errorLabelName")) == NULL) {
                 label = gtk_label_new("Cannot insert in database");
-                gtk_widget_set_name(label, "errorInsertName");
+                gtk_widget_set_name(label, "errorLabelName");
                 gtk_box_pack_start(GTK_BOX(currentBox), label , TRUE ,TRUE,2);
             }else{
                 gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");
