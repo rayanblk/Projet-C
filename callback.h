@@ -16,6 +16,8 @@ void closeNotebookTab(GtkWidget * widget, gpointer * data);
 
 void leagueTabFormSearch(GtkWidget * widget, gpointer * data);
 
+void tabSearch(GtkWidget * widget, gpointer * data);
+
 void openAddNewLeagueForm(GtkWidget * widget, gpointer * data);
 
 #endif //PROJET_C_CALLBACK_H

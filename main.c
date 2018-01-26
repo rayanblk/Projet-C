@@ -14,6 +14,7 @@ int main(int argc,char **argv) {
     DatabaseConnector * mainDatabaseConnector = NULL;
     gtk_init(&argc, &argv);
 
+
     mainWindowBuilder = gtk_builder_new();
 
     gtk_builder_add_from_file(mainWindowBuilder, "mainWindow.glade", &errorMessage);
@@ -103,6 +104,8 @@ int main(int argc,char **argv) {
          * Free the error variable
          * Stop the code execution
          */
+        printf("error");
+        printf("%s \n", errorMessage->message);
         g_error_free(errorMessage);
 
         return 0;
