@@ -148,7 +148,105 @@ void closeNotebookTab(GtkWidget * widget, gpointer * data){
 
 }
 
+void tabSearch(GtkWidget * widget, gpointer * data){
+    //Receive a structure array
+    TabSearch * tabMainParam = (TabSearch *) data;
+    TabSearchParam * allSearchTabParam;
 
+    PrepareStatement * query = NULL;
+    QueryStatement * queryResult = NULL;
+    char *** finalData = NULL;
+
+    GList * allCondition = NULL;
+    GList * allValue = NULL;
+    GList * l;
+
+    GtkListStore * listStore = NULL;
+    GtkTreeIter iter;
+
+    GtkWidget * tempWidget = NULL;
+
+    GString * finalStatement;
+    GString * valueString;
+    GString * conditionString;
+
+    int i;
+
+    if(tabMainParam != NULL){
+        allSearchTabParam = tabMainParam->allSearchParam;
+
+        for (i = 0; i < tabMainParam->numberOfParam; ++i) {
+            tempWidget = (GtkWidget *) gtk_builder_get_object(tabMainParam->builder, allSearchTabParam[i].gtkEntryId);
+            valueString = g_string_new(gtk_entry_get_text(GTK_ENTRY(tempWidget)));
+
+            if(strlen(valueString->str) > 0){
+                conditionString = g_string_new(allSearchTabParam[i].condition);
+                g_string_append_printf(conditionString, "%d", i);
+                allCondition = g_list_prepend(allCondition, (gpointer) conditionString->str);
+
+                /*
+                 * If want to do a like
+                 * Add the % after and before the param
+                 */
+                if(allSearchTabParam[i].typeCondition == 1){
+                    valueString = g_string_prepend(valueString, "%");
+                    valueString = g_string_append(valueString, "%");
+                }
+
+                /*
+                 * Add the value to value array
+                 */
+                allValue = g_list_prepend(allValue, (gpointer) valueString->str);
+
+            }else{
+                g_string_free(valueString, TRUE);
+            }
+        }
+
+        finalStatement = g_string_new(tabMainParam->statement);
+
+        if(g_list_length(allCondition) > 0 && g_list_length(allValue) > 0)
+            finalStatement = g_string_append(finalStatement, " WHERE ");
+
+        i = 0;
+
+        for (l = allCondition; l != NULL; l = l->next, i++){
+            if(i != 0)
+                finalStatement = g_string_append(finalStatement, " AND ");
+
+            finalStatement = g_string_append(finalStatement, (gchar) l->data);
+        }
+
+        query = prepareQuery(tabMainParam->mainParam->databaseInfo, finalStatement->str);
+
+        i = 0;
+
+        for (l = allValue; l != NULL; l = l->next, i++){
+            bindParam(query, (gchar) l->data, i);
+        }
+
+        queryResult = executePrepareStatement(query);
+
+        fetchAllResult(queryResult, &finalData);
+
+        listStore = (GtkListStore *) gtk_builder_get_object(tabMainParam->builder, "leagueListStore");
+
+        if(listStore != NULL){
+            gtk_list_store_clear(listStore);
+
+            for (int k = 0; k < queryResult->numberOfrow; ++k) {
+                gtk_list_store_append(listStore, &iter);
+                for (int m = 0; m < queryResult->numberOfcolumn; ++m) {
+                    gtk_list_store_set_value(listStore, &iter, m, (GValue *) finalData[k][m]);
+                }
+            }
+        }
+
+
+
+    }
+
+}
 
 void leagueTabFormSearch(GtkWidget * widget, gpointer * data){
 

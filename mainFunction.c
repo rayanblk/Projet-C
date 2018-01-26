@@ -108,8 +108,22 @@ void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data) {
 
     button = (GtkWidget *) gtk_builder_get_object(data->builder, "searchLeagueButton");
 
+    TabSearchParam tabParam[2];
+    TabSearch mainParam;
+
+    tabParam[0].condition = "id = $";
+    tabParam[0].typeCondition = 0;
+    strcpy(tabParam[0].gtkEntryId, "leagueTabIdEntry");
+
+    tabParam[1].condition = "name LIKE $";
+    tabParam[1].typeCondition = 1;
+    strcpy(tabParam[1].gtkEntryId, "leagueTabNameEntry");
+
+    mainParam.allSearchParam = tabParam;
+
+
     if(button != NULL)
-        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(leagueTabFormSearch), data);
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), data);
 
     button = (GtkWidget *) gtk_builder_get_object(data->builder, "leagueTabAddButton");
 
@@ -126,5 +140,4 @@ void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data) {
 void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
     printf("team view");
 }
-
 
