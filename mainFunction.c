@@ -138,6 +138,37 @@ void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data) {
 }
 
 void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
-    printf("team view");
+    GtkListStore *listStore = NULL;
+    GtkWidget * button = NULL;
+    GtkTreeIter tempIter;
+    QueryStatement * queryResult = NULL;
+    char *** finalData = NULL;
+
+    //listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "teamListStore");
+
+    if(data->mainParam->databaseInfo->error != 1){
+
+        queryResult = query(data->mainParam->databaseInfo, "SELECT id, name,city,to_char(\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\" FROM \"Team\"");
+
+        fetchAllResult(queryResult, &finalData);
+
+        for (int i = 0; i < queryResult->numberOfrow; ++i) {
+
+            gtk_list_store_append(listStore, &tempIter);
+            gtk_list_store_set(listStore, &tempIter
+                    , 0, finalData[i][0]
+                    , 1, finalData[i][1]
+                    , 2, finalData[i][2]
+                    , -1);
+        }
+
+        closeQuery(queryResult, finalData);
+    }
+
+    button = (GtkWidget *) gtk_builder_get_object(data->builder, "teamTabNewButton");
+
+    if(button != NULL) {
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewTeamForm), data);
+    }
 }
 
