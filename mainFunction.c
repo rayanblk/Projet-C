@@ -83,9 +83,13 @@ void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data) {
     GtkTreeIter tempIter;
     QueryStatement * queryResult = NULL;
     char *** finalData = NULL;
+    TabSearchParam ** tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
+    TabSearch * mainParam = (TabSearch *) malloc(sizeof(TabSearch));
 
 
     listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "leagueListStore");
+
+
 
     if(data->mainParam->databaseInfo->error != 1){
 
@@ -108,31 +112,31 @@ void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data) {
 
     button = (GtkWidget *) gtk_builder_get_object(data->builder, "searchLeagueButton");
 
-    TabSearchParam tabParam[2];
-    TabSearch mainParam;
+    tabParam[0] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+    strcpy(tabParam[0]->condition, "id = $");
+    tabParam[0]->typeCondition = 0;
+    strcpy(tabParam[0]->gtkEntryId, "leagueTabIdEntry");
 
-    tabParam[0].condition = "id = $";
-    tabParam[0].typeCondition = 0;
-    strcpy(tabParam[0].gtkEntryId, "leagueTabIdEntry");
+    tabParam[1] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+    strcpy(tabParam[1]->condition, "name LIKE $");
+    tabParam[1]->typeCondition = 1;
+    strcpy(tabParam[1]->gtkEntryId, "leagueTabNameEntry");
 
-    tabParam[1].condition = "name LIKE $";
-    tabParam[1].typeCondition = 1;
-    strcpy(tabParam[1].gtkEntryId, "leagueTabNameEntry");
-
-    mainParam.allSearchParam = tabParam;
+    mainParam->allSearchParam = tabParam;
+    mainParam->builder = data->builder;
+    mainParam->mainParam = data->mainParam;
+    strcpy(mainParam->statement, "SELECT id, name, to_char(\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\" FROM \"League\"");
+    mainParam->numberOfParam = 2;
+    strcpy(mainParam->listStoreId, "leagueListStore");
 
 
     if(button != NULL)
-        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), data);
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), mainParam);
 
     button = (GtkWidget *) gtk_builder_get_object(data->builder, "leagueTabAddButton");
 
     if(button != NULL)
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewLeagueForm), data);
-
-
-
-
 
 
 }

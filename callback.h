@@ -25,4 +25,5 @@ void openAddNewTeamForm(GtkWidget * widget, gpointer * data);
 void closeDialogBox(GtkWidget * widget,gpointer * data);
 
 void createNewLeague (GtkWidget * widget, gpointer * data);
+
 #endif //PROJET_C_CALLBACK_H

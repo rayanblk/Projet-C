@@ -127,6 +127,8 @@ QueryStatement * executePrepareStatement(PrepareStatement * prepareStatement){
                 }
             }
         }
+
+        printf("%s \n", prepareStatement->query);
         
         queryResult = PQexecParams(prepareStatement->connector->connector
                 , prepareStatement->query

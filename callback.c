@@ -25,6 +25,8 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
 
 
     pointer = functionCallbackParam->function;
+
+
     /*
      * With the builder in the structure, find the main Notebook main
      */
@@ -43,6 +45,7 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
         errorMessage = loadGladeFile(&tabBuilder, (char *) functionCallbackParam->fileName);
 
         if(errorMessage){
+            printf("%s \n", errorMessage->message);
             g_error_free(errorMessage);
 
             return;
@@ -106,9 +109,7 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
                 strcpy((char *) test->objectLabel, (char *) functionCallbackParam->objectLabel);
                 strcpy((char *) test->fileName, (char *) functionCallbackParam->fileName);
                 test->builder = tabBuilder;
-                if(pointer != NULL){
-                    (*pointer)(mainNotebookContent, test);
-                }
+                (*pointer)(mainNotebookContent, test);
 
 
             }
@@ -151,7 +152,7 @@ void closeNotebookTab(GtkWidget * widget, gpointer * data){
 void tabSearch(GtkWidget * widget, gpointer * data){
     //Receive a structure array
     TabSearch * tabMainParam = (TabSearch *) data;
-    TabSearchParam * allSearchTabParam;
+    TabSearchParam ** allSearchTabParam;
 
     PrepareStatement * query = NULL;
     QueryStatement * queryResult = NULL;
@@ -176,19 +177,20 @@ void tabSearch(GtkWidget * widget, gpointer * data){
         allSearchTabParam = tabMainParam->allSearchParam;
 
         for (i = 0; i < tabMainParam->numberOfParam; ++i) {
-            tempWidget = (GtkWidget *) gtk_builder_get_object(tabMainParam->builder, allSearchTabParam[i].gtkEntryId);
+            tempWidget = (GtkWidget *) gtk_builder_get_object(tabMainParam->builder, allSearchTabParam[i]->gtkEntryId);
             valueString = g_string_new(gtk_entry_get_text(GTK_ENTRY(tempWidget)));
 
+
             if(strlen(valueString->str) > 0){
-                conditionString = g_string_new(allSearchTabParam[i].condition);
-                g_string_append_printf(conditionString, "%d", i);
+                conditionString = g_string_new(allSearchTabParam[i]->condition);
+                g_string_append_printf(conditionString, "%d", g_list_length(allCondition) + 1);
                 allCondition = g_list_prepend(allCondition, (gpointer) conditionString->str);
 
                 /*
                  * If want to do a like
                  * Add the % after and before the param
                  */
-                if(allSearchTabParam[i].typeCondition == 1){
+                if(allSearchTabParam[i]->typeCondition == 1){
                     valueString = g_string_prepend(valueString, "%");
                     valueString = g_string_append(valueString, "%");
                 }
@@ -205,16 +207,19 @@ void tabSearch(GtkWidget * widget, gpointer * data){
 
         finalStatement = g_string_new(tabMainParam->statement);
 
-        if(g_list_length(allCondition) > 0 && g_list_length(allValue) > 0)
+        if(g_list_length(allCondition) > 0 && g_list_length(allValue) > 0){
             finalStatement = g_string_append(finalStatement, " WHERE ");
+        }
+
 
         i = 0;
+
 
         for (l = allCondition; l != NULL; l = l->next, i++){
             if(i != 0)
                 finalStatement = g_string_append(finalStatement, " AND ");
 
-            finalStatement = g_string_append(finalStatement, (gchar) l->data);
+            finalStatement = g_string_append(finalStatement, (gchar *) l->data);
         }
 
         query = prepareQuery(tabMainParam->mainParam->databaseInfo, finalStatement->str);
@@ -222,7 +227,7 @@ void tabSearch(GtkWidget * widget, gpointer * data){
         i = 0;
 
         for (l = allValue; l != NULL; l = l->next, i++){
-            bindParam(query, (gchar) l->data, i);
+            bindParam(query, (gchar *) l->data, i);
         }
 
         queryResult = executePrepareStatement(query);
@@ -237,17 +242,25 @@ void tabSearch(GtkWidget * widget, gpointer * data){
             for (int k = 0; k < queryResult->numberOfrow; ++k) {
                 gtk_list_store_append(listStore, &iter);
                 for (int m = 0; m < queryResult->numberOfcolumn; ++m) {
-                    gtk_list_store_set_value(listStore, &iter, m, (GValue *) finalData[k][m]);
+                    gtk_list_store_set(listStore, &iter, m, finalData[k][m], -1);
                 }
             }
         }
 
+        g_list_free(allCondition);
+        g_list_free(allValue);
 
+        g_string_free(finalStatement, TRUE);
+
+        closePrepareStatement(query, queryResult, finalData);
 
     }
 
 }
 
+/*
+ * To delete
+ */
 void leagueTabFormSearch(GtkWidget * widget, gpointer * data){
 
     GtkWidget * allEntry[3];
@@ -377,6 +390,7 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
     GtkWidget * window;
     GtkBuilder * builder;
     GtkWidget * button;
+    GError * error = NULL;
 
     newParam->mainParam = mainParam->mainParam;
     strcpy(newParam->fileName,mainParam->fileName);
@@ -385,7 +399,12 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
     strcpy(newParam->parentName,mainParam->parentName);
     strcpy(newParam->objectName,mainParam->objectName);
 
-    loadGladeFile(&builder, "formWidget/newLeagueForm.glade");
+    error = loadGladeFile(&builder, "formWidget/newLeagueForm.glade");
+
+    if(error != NULL)
+        printf("%s \n", error->message);
+
+    newParam->builder = builder;
 
     newParam->builder = builder;
 
@@ -405,6 +424,7 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
 
     gtk_widget_show_all(window);
 }
+
 
 void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
 
@@ -441,7 +461,6 @@ void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
 
     gtk_widget_show_all(window);
 }
-
 
 void closeDialogBox (GtkWidget * widget, gpointer * data) {
     GtkWidget * window = (GtkWidget *) data;
@@ -494,10 +513,12 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
         bindParam(query,param,0);
         queryResult = executePrepareStatement(query);
 
+
         if(queryResult->error == 1){
             if((label = findChild(currentBox, "errorLabelName")) == NULL) {
                 label = gtk_label_new("Cannot insert in database");
                 gtk_widget_set_name(label, "errorLabelName");
+
                 gtk_box_pack_start(GTK_BOX(currentBox), label , TRUE ,TRUE,2);
             }else{
                 gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");

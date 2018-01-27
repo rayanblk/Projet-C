@@ -24,7 +24,7 @@ typedef struct CallbackParam {
 
 typedef struct TabSearchParam{
     char gtkEntryId[250];
-    gchar * condition;
+    gchar condition[250];
     int typeCondition;
 } TabSearchParam;
 
@@ -33,7 +33,7 @@ typedef struct TabSearch{
     char listStoreId[250];
     GtkBuilder * builder;
     int numberOfParam;
-    TabSearchParam * allSearchParam;
+    TabSearchParam ** allSearchParam;
     MainParam * mainParam;
 } TabSearch;
 
