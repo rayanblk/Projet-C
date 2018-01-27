@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.20.2 -->
 <interface>
-
- <requires lib="gtk+" version="3.6"/>
+  <requires lib="gtk+" version="3.0"/>
   <object class="GtkDialog" id="leagueAddForm">
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
     <child internal-child="vbox">
-
-      <object class="GtkBox" id="GtkBox">
+      <object class="GtkBox">
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child internal-child="action_area">
-          <object class="GtkButtonBox" id="gtkBox">
+          <object class="GtkButtonBox">
             <property name="can_focus">False</property>
             <property name="margin_top">20</property>
             <property name="layout_style">end</property>
@@ -75,7 +73,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="GtkBox2">
+              <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
