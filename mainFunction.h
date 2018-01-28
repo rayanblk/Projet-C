@@ -22,4 +22,6 @@ void initLeagueTreeView(GtkWidget * parentBox, CallbackParam * data);
 
 void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data);
 
+void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data);
+
 #endif //PROJET_C_MAINFUNCTION_H
