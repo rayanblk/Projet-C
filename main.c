@@ -72,7 +72,7 @@ int main(int argc,char **argv) {
          * Get the player details button, via glade file
          * Connect the clicked action, to the add tab to notebook function, with the init structure
          */
-        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "playerTab", "Player", "mainTabWidget/playerTabContent.glade", NULL, &allNotebookParam, mainParam);
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "playerTab", "Player", "mainTabWidget/playerTabContent.glade", initPlayerTreeView, &allNotebookParam, mainParam);
 
         button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManagePlayerButton");
 

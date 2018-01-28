@@ -293,7 +293,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
         completeTabParam->searchParam = mainParam;
 
         if(button != NULL)
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewLeagueForm), (gpointer) completeTabParam);
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewTeamForm), (gpointer) completeTabParam);
 
     }
 
@@ -308,5 +308,125 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
 
     if(tempView != NULL)
         g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayLeagueDetail), (gpointer) data);
+}
+
+
+void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
+    GtkListStore *listStore = NULL;
+    GtkWidget * button = NULL;
+    GtkTreeIter tempIter;
+    QueryStatement * queryResult = NULL;
+    char *** finalData = NULL;
+    TabSearchParam ** tabParam = (TabSearchParam **) malloc(4 * sizeof(TabSearchParam *));
+    TabSearch * mainParam = (TabSearch *) malloc(sizeof(TabSearch));
+    AllTabParam * completeTabParam = (AllTabParam *) malloc(sizeof(AllTabParam));
+
+    listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "playerListStore");
+
+    if(listStore == NULL){
+        printf("error");
+    }
+    if(data->mainParam->databaseInfo->error != 1) {
+
+        queryResult = query(data->mainParam->databaseInfo,
+                            "SELECT\n"
+                                    "\"Player\".id,\n"
+                                    "\"Player\".firstname || ' ' || \"Player\".lastname AS Name,\n"
+                                    "\"Position\".name as PositionName,\n"
+                                    "\"Team\".name as TeamName,\n"
+                                    "to_char(\"Player\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\"\n"
+                                    "FROM \"Player\"\n"
+                                    "JOIN \"Position\" ON \"Player\".idposition = \"Position\".id\n"
+                                    "JOIN \"Team\" ON \"Player\".idteam = \"Team\".id");
+
+        fetchAllResult(queryResult, &finalData);
+
+
+
+
+        for (int i = 0; i < queryResult->numberOfrow; ++i) {
+
+            gtk_list_store_append(listStore, &tempIter);
+            gtk_list_store_set(listStore, &tempIter
+                    , 0, finalData[i][0]
+                    , 1, finalData[i][1]
+                    , 2, finalData[i][3]
+                    , 3, finalData[i][2]
+                    , 4, finalData[i][4]
+                    , -1);
+        }
+
+        closeQuery(queryResult, finalData);
+    }
+
+    /*
+    if(tabParam != NULL && completeTabParam != NULL){
+
+        tabParam[0] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if(tabParam[0] != NULL){
+
+            strcpy(tabParam[0]->condition, "\"Player\".id = $");
+            tabParam[0]->typeCondition = 0;
+            strcpy(tabParam[0]->gtkEntryId, "idPlayerEntry");
+        }
+
+        tabParam[1] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if(tabParam[1] != NULL){
+            strcpy(tabParam[1]->condition, "\"Player\".firstname ILIKE $");
+            tabParam[1]->typeCondition = 1;
+            strcpy(tabParam[1]->gtkEntryId, "firstnamePlayerEntry");
+        }
+
+        tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if(tabParam[2] != NULL){
+            strcpy(tabParam[2]->condition, "\"Player\".lasttname ILIKE $");
+            tabParam[2]->typeCondition = 2;
+            strcpy(tabParam[2]->gtkEntryId, "lastnamePlayerEntry");
+        }
+
+        tabParam[3] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if(tabParam[3] != NULL){
+            strcpy(tabParam[3]->condition, "\"League\".name ILIKE $");
+            tabParam[3]->typeCondition = 2;
+            strcpy(tabParam[3]->gtkEntryId, "teamPlayerEntry");
+        }
+
+        mainParam->allSearchParam = tabParam;
+        mainParam->builder = data->builder;
+        mainParam->mainParam = data->mainParam;
+        strcpy(mainParam->statement,
+               "SELECT"
+                       "\"Player\".id,"
+                       "\"Player\".firstname || ' ' || \"Player\".lastname AS Name,"
+                       "\"Position\".name as PositionName,"
+                       "\"Team\".name as TeamName"
+                       "to_char(\"Player\".dateUpdate, 'YYYY-MM-DD') AS \"dateUpdate\""
+                       "FROM \"Player\""
+                       "JOIN \"Position\" ON \"Player\".idposition = \"Position\".id"
+                       "JOIN \"Team\" ON \"Player\".idteam = \"Team\".id");
+        mainParam->numberOfParam = 4;
+        strcpy(mainParam->listStoreId, "playerListStore");
+
+        button = (GtkWidget *) gtk_builder_get_object(data->builder, "playerSearchButton");
+
+        if(button != NULL)
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), mainParam);
+
+        button = (GtkWidget *) gtk_builder_get_object(data->builder, "playerTabAddButton");
+
+        completeTabParam->mainParam = data;
+        completeTabParam->searchParam = mainParam;
+
+        if(button != NULL)
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewLeagueForm), (gpointer) completeTabParam);
+
+    }
+
+
+    button = (GtkWidget *) gtk_builder_get_object(data->builder, "playerTabNewButton");
+
+    if(button != NULL) {
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewTeamForm), data);
+    }*/
 }
 
