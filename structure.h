@@ -6,7 +6,6 @@
 #define PROJET_C_PROTOTYPE_H
 
 #include <gtk/gtk.h>
-#include <libpq-fe.h>
 #include "database.h"
 
 typedef struct MainParam {
@@ -15,13 +14,34 @@ typedef struct MainParam {
 
 typedef struct CallbackParam {
     GtkBuilder * builder;
-    char * parentName[250];
-    char * objectName[250];
-    char * objectLabel[250];
-    char * fileName[250];
+    char parentName[250];
+    char objectName[250];
+    char objectLabel[250];
+    char fileName[250];
     void * function;
     MainParam * mainParam;
 } CallbackParam;
+
+typedef struct TabSearchParam{
+    char gtkEntryId[250];
+    gchar condition[250];
+    int typeCondition;
+} TabSearchParam;
+
+typedef struct TabSearch{
+    char statement[250];
+    char listStoreId[250];
+    GtkBuilder * builder;
+    int numberOfParam;
+    TabSearchParam ** allSearchParam;
+    MainParam * mainParam;
+} TabSearch;
+
+typedef struct AllTabParam{
+    CallbackParam * mainParam;
+    TabSearch * searchParam;
+} AllTabParam;
+
 
 
 

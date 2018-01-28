@@ -25,6 +25,8 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
 
 
     pointer = functionCallbackParam->function;
+
+
     /*
      * With the builder in the structure, find the main Notebook main
      */
@@ -43,6 +45,7 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
         errorMessage = loadGladeFile(&tabBuilder, (char *) functionCallbackParam->fileName);
 
         if(errorMessage){
+            printf("%s \n", errorMessage->message);
             g_error_free(errorMessage);
 
             return;
@@ -106,9 +109,7 @@ void openNotebookTab(GtkWidget * widget, gpointer * data){
                 strcpy((char *) test->objectLabel, (char *) functionCallbackParam->objectLabel);
                 strcpy((char *) test->fileName, (char *) functionCallbackParam->fileName);
                 test->builder = tabBuilder;
-                if(pointer != NULL){
-                    (*pointer)(mainNotebookContent, test);
-                }
+                (*pointer)(mainNotebookContent, test);
 
 
             }
@@ -148,8 +149,174 @@ void closeNotebookTab(GtkWidget * widget, gpointer * data){
 
 }
 
+void tabSearch(GtkWidget * widget, gpointer * data){
+    //Receive a structure array
+    TabSearch * tabMainParam = (TabSearch *) data;
+    TabSearchParam ** allSearchTabParam;
+
+    PrepareStatement * query = NULL;
+    QueryStatement * queryResult = NULL;
+    char *** finalData = NULL;
+
+    GList * allCondition = NULL;
+    GList * allValue = NULL;
+    GList * l;
+
+    GtkListStore * listStore = NULL;
+    GtkTreeIter iter;
+
+    GtkWidget * tempWidget = NULL;
+
+    GString * finalStatement;
+    GString * valueString;
+    GString * conditionString;
+
+    int i;
+
+    if(tabMainParam != NULL){
+        /*
+         * Get all search param receive
+         */
+        allSearchTabParam = tabMainParam->allSearchParam;
+
+        /*
+         * Travel all the GTK entry to check if a value is enter
+         */
+        for (i = 0; i < tabMainParam->numberOfParam; ++i) {
+            /*
+             * Get the entry via the builder
+             * Initialize the string with entry value
+             */
+            tempWidget = (GtkWidget *) gtk_builder_get_object(tabMainParam->builder, allSearchTabParam[i]->gtkEntryId);
+            valueString = g_string_new(gtk_entry_get_text(GTK_ENTRY(tempWidget)));
 
 
+            if(strlen(valueString->str) > 0){
+                /*
+                 * Initialize the condition string
+                 * Add this condition to the condition list
+                 */
+                conditionString = g_string_new(allSearchTabParam[i]->condition);
+                g_string_append_printf(conditionString, "%d", g_list_length(allCondition) + 1);
+                allCondition = g_list_prepend(allCondition, (gpointer) conditionString->str);
+
+                /*
+                 * If want to do a like
+                 * type condition == 1
+                 * Add the % after and before the param
+                 * type condition == 2
+                 * Add the % after
+                 * type condition == 3
+                 * Add the % before
+                 */
+                if(allSearchTabParam[i]->typeCondition == 1) {
+                    valueString = g_string_prepend(valueString, "%");
+                    valueString = g_string_append(valueString, "%");
+                }else if(allSearchTabParam[i]->typeCondition == 2){
+                    valueString = g_string_append(valueString, "%");
+                }else if(allSearchTabParam[i]->typeCondition == 3){
+                    valueString = g_string_prepend(valueString, "%");
+                }
+
+                /*
+                 * Add the value to value list
+                 */
+                allValue = g_list_prepend(allValue, (gpointer) valueString->str);
+
+            }else{
+                /*
+                 * If no text is enter, free the string
+                 */
+                g_string_free(valueString, TRUE);
+            }
+        }
+        /*
+         * Put the receive statement on a GString to easily manipulate it
+         */
+        finalStatement = g_string_new(tabMainParam->statement);
+
+        /*
+         * if the condition list is not empty, add the WHERE key word
+         */
+        if(g_list_length(allCondition) > 0 && g_list_length(allValue) > 0){
+            finalStatement = g_string_append(finalStatement, " WHERE ");
+        }
+
+
+        i = 0;
+
+        /*
+         * Browse all the condition list
+         * Add to the statement condition
+         * Add or no the END keyword
+         */
+        for (l = allCondition; l != NULL; l = l->next, i++){
+            if(i != 0)
+                finalStatement = g_string_append(finalStatement, " AND ");
+
+            finalStatement = g_string_append(finalStatement, (gchar *) l->data);
+        }
+
+        /*
+         * Prepare the query with the statement prepare previously
+         */
+        query = prepareQuery(tabMainParam->mainParam->databaseInfo, finalStatement->str);
+
+        i = 0;
+
+        /*
+         * Bind all the param to the statement
+         */
+        for (l = allValue; l != NULL; l = l->next, i++){
+            bindParam(query, (gchar *) l->data, i);
+        }
+
+        /*
+         * Execute the statement
+         * Fetch all the result
+         */
+        queryResult = executePrepareStatement(query);
+
+        fetchAllResult(queryResult, &finalData);
+
+        /*
+         * Get the list store
+         * Clear the list
+         * Add the new result to the list
+         */
+        listStore = (GtkListStore *) gtk_builder_get_object(tabMainParam->builder, tabMainParam->listStoreId);
+
+        if(listStore != NULL){
+
+            gtk_list_store_clear(listStore);
+
+            for (int k = 0; k < queryResult->numberOfrow; ++k) {
+                gtk_list_store_append(listStore, &iter);
+                for (int m = 0; m < queryResult->numberOfcolumn; ++m) {
+                    gtk_list_store_set(listStore, &iter, m, finalData[k][m], -1);
+                }
+            }
+        }
+
+        /*
+         * Free all the list use
+         * Free all the string use
+         * Free the statement memory
+         */
+        g_list_free(allCondition);
+        g_list_free(allValue);
+
+        g_string_free(finalStatement, TRUE);
+
+        closePrepareStatement(query, queryResult, finalData);
+
+    }
+
+}
+
+/*
+ * To delete
+ */
 void leagueTabFormSearch(GtkWidget * widget, gpointer * data){
 
     GtkWidget * allEntry[3];
@@ -274,20 +441,26 @@ void leagueTabFormSearch(GtkWidget * widget, gpointer * data){
 
 void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
 
-    CallbackParam * mainParam = (CallbackParam *) data;
+    AllTabParam * mainParam = (AllTabParam *) data;
     CallbackParam * newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
     GtkWidget * window;
     GtkBuilder * builder;
     GtkWidget * button;
+    GError * error = NULL;
 
-    newParam->mainParam = mainParam->mainParam;
-    strcpy(newParam->fileName,mainParam->fileName);
-    newParam->function  = mainParam->function;
-    strcpy(newParam->objectLabel,mainParam->objectLabel);
-    strcpy(newParam->parentName,mainParam->parentName);
-    strcpy(newParam->objectName,mainParam->objectName);
+    newParam->mainParam = mainParam->mainParam->mainParam;
+    strcpy(newParam->fileName,mainParam->mainParam->fileName);
+    newParam->function  = mainParam->mainParam->function;
+    strcpy(newParam->objectLabel,mainParam->mainParam->objectLabel);
+    strcpy(newParam->parentName,mainParam->mainParam->parentName);
+    strcpy(newParam->objectName,mainParam->mainParam->objectName);
 
-    loadGladeFile(&builder, "formWidget/newLeagueForm.glade");
+    error = loadGladeFile(&builder, "formWidget/newLeagueForm.glade");
+
+    if(error != NULL)
+        printf("%s \n", error->message);
+
+    newParam->builder = builder;
 
     newParam->builder = builder;
 
@@ -301,13 +474,52 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
 
     button = (GtkWidget *) gtk_builder_get_object(builder, "leagueAddFormCreateButton");
 
+    mainParam->mainParam = newParam;
+
     if(button != NULL)
-        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewLeague), newParam);
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewLeague), (gpointer * ) mainParam);
+
+
+    gtk_widget_show_all(window);
+
+}
+
+
+void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
+
+    AllTabParam * mainParam = (AllTabParam *) data;
+    CallbackParam * newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
+    GtkWidget * window;
+    GtkBuilder * builder;
+    GtkWidget * button;
+
+    newParam->mainParam = mainParam->mainParam->mainParam;
+    strcpy(newParam->fileName,mainParam->mainParam->fileName);
+    newParam->function  = mainParam->mainParam->function;
+    strcpy(newParam->objectLabel,mainParam->mainParam->objectLabel);
+    strcpy(newParam->parentName,mainParam->mainParam->parentName);
+    strcpy(newParam->objectName,mainParam->mainParam->objectName);
+
+    loadGladeFile(&builder, "formWidget/newTeamForm.glade");
+
+    newParam->builder = builder;
+
+    window = (GtkWidget *) gtk_builder_get_object(builder, "teamAddForm");
+
+    button = (GtkWidget *) gtk_builder_get_object(builder, "teamAddFormCloseButton");
+
+    if(button != NULL)
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(closeDialogBox), window);
+
+
+    button = (GtkWidget *) gtk_builder_get_object(builder, "teamAddFormCreateButton");
+
+    /*if(button != NULL)
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewLeague), newParam);*/
 
 
     gtk_widget_show_all(window);
 }
-
 
 void closeDialogBox (GtkWidget * widget, gpointer * data) {
     GtkWidget * window = (GtkWidget *) data;
@@ -318,7 +530,7 @@ void closeDialogBox (GtkWidget * widget, gpointer * data) {
 };
 
 void createNewLeague (GtkWidget * widget, gpointer * data) {
-    CallbackParam * allparam = (CallbackParam *) data;
+    AllTabParam * allParam = (AllTabParam *) data;
     GtkWidget * allEntry;
     GtkWidget * currentBox;
     int numberOfElement = 0;
@@ -331,9 +543,9 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
 
 
 
-    allEntry = (GtkWidget *) gtk_builder_get_object(allparam->builder, "leagueAddFormNameEntry");
+    allEntry = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormNameEntry");
 
-    currentBox = (GtkWidget * )gtk_builder_get_object(allparam->builder,"leagueAddFormBox");
+    currentBox = (GtkWidget * )gtk_builder_get_object(allParam->mainParam->builder,"leagueAddFormBox");
 
 
     if(strlen(param = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry))) <= 0){
@@ -356,15 +568,16 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
 
 
         statement = "INSERT INTO  \"League\" (name) VALUES ($1) ";
-        query =  prepareQuery(allparam->mainParam->databaseInfo,statement);
+        query =  prepareQuery(allParam->mainParam->mainParam->databaseInfo,statement);
         bindParam(query,param,0);
         queryResult = executePrepareStatement(query);
-        queryResult->error = 1;
+
 
         if(queryResult->error == 1){
-            if((label = findChild(currentBox, "errorInsertName")) == NULL) {
+            if((label = findChild(currentBox, "errorLabelName")) == NULL) {
                 label = gtk_label_new("Cannot insert in database");
-                gtk_widget_set_name(label, "errorInsertName");
+                gtk_widget_set_name(label, "errorLabelName");
+
                 gtk_box_pack_start(GTK_BOX(currentBox), label , TRUE ,TRUE,2);
             }else{
                 gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");
@@ -373,12 +586,90 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
             gtk_widget_show_all(currentBox);
 
         }else{
-            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allparam->builder,"leagueAddForm"));
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder,"leagueAddForm"));
+
+            tabSearch(widget, (gpointer *) allParam->searchParam);
 
         }
         closePrepareStatement(query,queryResult,NULL);
+
+        /*
+         * Refresh list store
+         */
+    }
+};
+
+void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data){
+    GtkTreeIter iter;
+    GtkTreeModel * model;
+    char * test;
+    CallbackParam * allParam = (CallbackParam *) data;
+    GError * error = NULL;
+    GtkWidget * window = NULL;
+    GtkWidget * tempWidget = NULL;
+    PrepareStatement * query = NULL;
+    QueryStatement * resultQuery = NULL;
+    char ** finalData = NULL;
+
+    model = gtk_tree_view_get_model(treeView);
+    gtk_tree_model_get_iter(model, &iter, path);
+
+
+    /*
+     * Get the dialog box
+     * Display the value
+     */
+    if((error = loadGladeFile(&allParam->builder, "detailWidget/leagueDetail.glade")) == NULL){
+
+        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailWindow");
+
+        if(window != NULL){
+            gtk_widget_show_all(window);
+
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailIdValue");
+            gtk_tree_model_get(model, &iter, 0, &test, -1);
+            gtk_label_set_label(GTK_LABEL(tempWidget), test);
+
+            query = prepareQuery(allParam->mainParam->databaseInfo, "SELECT id, name, to_char(\"dateUpdate\", 'YYYY-MM-DD') AS \"dateCreate\", to_char(\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\" FROM \"League\" WHERE id = $1");
+
+            bindParam(query, test, 0);
+
+            resultQuery = executePrepareStatement(query);
+
+            if(resultQuery->error != 1){
+
+                fetchResult(resultQuery, &finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailNameValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailDateCreateValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[2]);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailDateUpdateValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[3]);
+            }
+
+            closePrepareStatement(query, resultQuery, &finalData);
+
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailCloseButton");
+
+            if(tempWidget != NULL)
+                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(closeDialogBox), (gpointer) window);
+
+        }
+
+    }else{
+        printf("%s \n", error->message);
+        g_error_free(error);
     }
 
 
 
-};
+}
