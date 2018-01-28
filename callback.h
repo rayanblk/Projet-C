@@ -26,4 +26,6 @@ void closeDialogBox(GtkWidget * widget,gpointer * data);
 
 void createNewLeague (GtkWidget * widget, gpointer * data);
 
+void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * user_data);
+
 #endif //PROJET_C_CALLBACK_H

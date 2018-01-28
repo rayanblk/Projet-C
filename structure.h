@@ -37,6 +37,11 @@ typedef struct TabSearch{
     MainParam * mainParam;
 } TabSearch;
 
+typedef struct AllTabParam{
+    CallbackParam * mainParam;
+    TabSearch * searchParam;
+} AllTabParam;
+
 
 
 
