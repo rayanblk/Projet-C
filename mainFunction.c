@@ -200,6 +200,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
     TabSearchParam ** tabParam = (TabSearchParam **) malloc(4 * sizeof(TabSearchParam *));
     TabSearch * mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     AllTabParam * completeTabParam = (AllTabParam *) malloc(sizeof(AllTabParam));
+    GtkTreeView * tempView = NULL;
 
     listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "teamListStore");
 
@@ -227,7 +228,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
                     , 2, finalData[i][2]
                     , 3, finalData[i][3]
                     , 4, finalData[i][4]
-                    , 4, finalData[i][5]
+                    , 5, finalData[i][5]
                     , -1);
         }
 
@@ -302,5 +303,10 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
     if(button != NULL) {
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewTeamForm), data);
     }
+
+    tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "leagueTreeView");
+
+    if(tempView != NULL)
+        g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayLeagueDetail), (gpointer) data);
 }
 

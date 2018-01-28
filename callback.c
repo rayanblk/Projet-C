@@ -656,7 +656,7 @@ void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[3]);
             }
 
-            closePrepareStatement(query, resultQuery, &finalData);
+            closePrepareStatement(query, resultQuery, (char ***) finalData);
 
             tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailCloseButton");
 
