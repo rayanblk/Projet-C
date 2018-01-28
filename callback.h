@@ -10,11 +10,11 @@
 
 void destroyWindow(GtkWidget * widget, gpointer data);
 
+
 void openNotebookTab(GtkWidget * widget, gpointer * data);
 
 void closeNotebookTab(GtkWidget * widget, gpointer * data);
 
-void leagueTabFormSearch(GtkWidget * widget, gpointer * data);
 
 void tabSearch(GtkWidget * widget, gpointer * data);
 
@@ -22,9 +22,12 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data);
 
 void openAddNewTeamForm(GtkWidget * widget, gpointer * data);
 
+
 void closeDialogBox(GtkWidget * widget,gpointer * data);
 
+
 void createNewLeague (GtkWidget * widget, gpointer * data);
+
 
 void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * user_data);
 
@@ -35,5 +38,7 @@ void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
 void openAddNewPlayerForm(GtkWidget * widget, gpointer * data);
 
 void createNewTeam (GtkWidget * widget, gpointer * data);
+
+void openMoreDetailLeague(GtkWidget * widget, gpointer * data);
 
 #endif //PROJET_C_CALLBACK_H

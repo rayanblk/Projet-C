@@ -42,6 +42,11 @@ typedef struct AllTabParam{
     TabSearch * searchParam;
 } AllTabParam;
 
+typedef struct CallBackParamWithId{
+    CallbackParam * allCalbackParam;
+    char id[10];
+} CallBackParamWithId;
+
 
 
 
