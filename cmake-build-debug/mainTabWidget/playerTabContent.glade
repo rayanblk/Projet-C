@@ -271,6 +271,7 @@
         <child>
           <object class="GtkTreeViewColumn" id="idColumn">
             <property name="title" translatable="yes">Id</property>
+            <property name="expand">True</property>
             <property name="alignment">0.5</property>
             <child>
               <object class="GtkCellRendererText" id="cellTextId"/>
@@ -284,6 +285,7 @@
           <object class="GtkTreeViewColumn" id="nameColumn">
             <property name="max_width">1</property>
             <property name="title" translatable="yes">Name</property>
+            <property name="expand">True</property>
             <property name="alignment">0.5</property>
             <child>
               <object class="GtkCellRendererText" id="cellTextName"/>
@@ -296,6 +298,8 @@
         <child>
           <object class="GtkTreeViewColumn" id="teamColumn">
             <property name="title" translatable="yes">Team</property>
+            <property name="expand">True</property>
+            <property name="alignment">0.5</property>
             <child>
               <object class="GtkCellRendererText" id="cellTextTeam"/>
               <attributes>
@@ -307,6 +311,8 @@
         <child>
           <object class="GtkTreeViewColumn" id="positionColumn">
             <property name="title" translatable="yes">Position</property>
+            <property name="expand">True</property>
+            <property name="alignment">0.5</property>
             <child>
               <object class="GtkCellRendererText" id="cellTextPosition"/>
               <attributes>
@@ -318,6 +324,8 @@
         <child>
           <object class="GtkTreeViewColumn" id="dateUpdateColumn">
             <property name="title" translatable="yes">Date update</property>
+            <property name="expand">True</property>
+            <property name="alignment">0.5</property>
             <child>
               <object class="GtkCellRendererText" id="cellTextDateUpdate"/>
               <attributes>
