@@ -30,4 +30,6 @@ void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
 
 void displayTeamDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
 
+void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
+
 #endif //PROJET_C_CALLBACK_H
