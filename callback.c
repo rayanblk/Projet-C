@@ -314,130 +314,6 @@ void tabSearch(GtkWidget * widget, gpointer * data){
 
 }
 
-/*
- * To delete
- */
-void leagueTabFormSearch(GtkWidget * widget, gpointer * data){
-
-    GtkWidget * allEntry[3];
-    CallbackParam * mainParam = (CallbackParam *) data;
-    char allCondition[3][200] = {{0}};
-    char statement[500] = {0};
-    char * param[3] = {0};
-    char buffer[200] = {0};
-    char *temp;
-    GtkListStore * listStore = NULL;
-    GtkTreeIter tempIter;
-    int numberOfElement = 0, i = 0;
-    char *** finalData = NULL;
-    PrepareStatement * query;
-    QueryStatement * queryExecute;
-
-    /*
-     * Get all entry :
-     */
-    allEntry[0] = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "leagueTabIdEntry");
-    allEntry[1] = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "leagueTabNameEntry");
-    //allEntry[2] = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "leagueTabSeasonEntry");
-
-
-
-    /*
-     * If the user enter an element on ID field
-     */
-    if(strlen(param[numberOfElement] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[0]))) > 0){
-        sprintf(allCondition[numberOfElement], "id = $%d", numberOfElement + 1);
-        numberOfElement++;
-    }
-
-    /*
-     * If the user enter an element on name field
-     * We want to do LIKE, so need to put the %
-     * Duplicate the entry text buffer
-     * Add the % on a temp variable
-     */
-    if(strlen(param[numberOfElement] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[1]))) > 0){
-        sprintf(allCondition[numberOfElement], "name LIKE $%d", numberOfElement + 1);
-
-        temp = g_strdup(param[numberOfElement]);
-        strcpy(buffer, "%");
-        strcat(buffer, temp);
-        strcat(buffer, "%");
-        strcpy(temp, buffer);
-        param[numberOfElement] = temp;
-        numberOfElement++;
-    }
-
-    /*
-     * Empty the buffer
-     */
-    strcpy(buffer, "");
-
-    /*
-     * Prepare the statement
-     */
-    strcpy(statement, "SELECT id, name, to_char(\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\" FROM \"League\"");
-
-    /*
-     * Make an implode of all condition array
-     */
-    for (int j = 0; j < numberOfElement; ++j) {
-
-        if(j != 0){
-            strcat(buffer, " AND ");
-        }
-        strcat(buffer, allCondition[j]);
-    }
-
-    /*
-     * Add the where to the statement, only if field are selected
-     */
-    if(numberOfElement > 0)
-        strcat(statement, " WHERE ");
-
-    /*
-     * Concat buffer to statements
-     */
-    strcat(statement, buffer);
-
-    /*
-     * Prepare the query
-     * Bind all the value
-     * Execute the prepare statement
-     * Get the return
-     */
-    query = prepareQuery(mainParam->mainParam->databaseInfo, statement);
-
-    for (int j = 0; j < numberOfElement; ++j) {
-        bindParam(query, param[j], numberOfElement);
-    }
-
-    queryExecute = executePrepareStatement(query);
-
-    fetchAllResult(queryExecute, &finalData);
-
-    /*
-     * Get the list store
-     * Empty if
-     * Add new value
-     */
-    listStore = (GtkListStore *) gtk_builder_get_object(mainParam->builder, "leagueListStore");
-
-    if(listStore != NULL){
-        gtk_list_store_clear(listStore);
-    }
-
-    for (int k = 0; k < queryExecute->numberOfrow; ++k) {
-        gtk_list_store_append(listStore, &tempIter);
-        gtk_list_store_set(listStore, &tempIter
-                , 0, finalData[k][0]
-                , 1, finalData[k][1]
-                , 2, finalData[k][2]
-                , -1);
-    }
-
-    closePrepareStatement(query, queryExecute, finalData);
-}
 
 void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
 
@@ -484,7 +360,6 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data){
 
 }
 
-
 void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
 
     AllTabParam * mainParam = (AllTabParam *) data;
@@ -520,6 +395,7 @@ void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
 
     gtk_widget_show_all(window);
 }
+
 
 void closeDialogBox (GtkWidget * widget, gpointer * data) {
     GtkWidget * window = (GtkWidget *) data;
@@ -599,11 +475,13 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
     }
 };
 
+
 void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data){
     GtkTreeIter iter;
     GtkTreeModel * model;
     char * test;
     CallbackParam * allParam = (CallbackParam *) data;
+    CallBackParamWithId * allParamWithId = (CallBackParamWithId *) malloc(sizeof(CallBackParamWithId));
     GError * error = NULL;
     GtkWidget * window = NULL;
     GtkWidget * tempWidget = NULL;
@@ -662,6 +540,14 @@ void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
 
             if(tempWidget != NULL)
                 g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(closeDialogBox), (gpointer) window);
+
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueDetailDetailButton");
+
+            allParamWithId->allCalbackParam = allParam;
+            strcpy(allParamWithId->id, test);
+
+            if(tempWidget != NULL)
+                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(openMoreDetailLeague), (gpointer) allParamWithId);
 
         }
 
@@ -876,6 +762,121 @@ void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
 
             }
         }
+
+    }else{
+        printf("%s \n", error->message);
+        g_error_free(error);
+    }
+
+}
+
+
+void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
+    CallBackParamWithId * allParam = (CallBackParamWithId *) data;
+    PrepareStatement * query = NULL;
+    QueryStatement * queryResult = NULL;
+    char *** finalData = NULL;
+    GtkBuilder* builder = NULL;
+    GtkWidget * window = NULL;
+    GtkWidget * temp = NULL;
+    GtkTreeIter iter;
+    GtkWidget * listStore = NULL;
+    GError * error = NULL;
+
+    error = loadGladeFile(&builder, "leagueDetail/main.glade");
+
+    if(error == NULL){
+
+        window = (GtkWidget *) gtk_builder_get_object(builder, "leagueMoreDetail");
+
+        if(allParam->allCalbackParam->mainParam->databaseInfo->error != 1){
+
+            /*
+             * Team list store update
+             */
+            query = prepareQuery(allParam->allCalbackParam->mainParam->databaseInfo,
+                    "SELECT"
+                    "\"Team\".id,"
+                    "\"Team\".name,"
+                    "\"Team\".city,"
+                    "\"Team\".stadium\n"
+                    "FROM \"Team\"\n"
+                    "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id\n"
+                    "WHERE \"League\".id = $1");
+
+            bindParam(query, allParam->id, 0);
+
+            queryResult = executePrepareStatement(query);
+
+            if(queryResult->error != 1){
+                fetchAllResult(queryResult, &finalData);
+
+                listStore = (GtkWidget *) gtk_builder_get_object(builder, "teamListStore");
+
+                for (int i = 0; i < queryResult->numberOfrow; ++i) {
+                    gtk_list_store_append(GTK_LIST_STORE(listStore), &iter);
+                    gtk_list_store_set(GTK_LIST_STORE(listStore), &iter,
+                                        0, finalData[i][0],
+                                        1, finalData[i][1],
+                                        2, finalData[i][2],
+                                        3, finalData[i][3],
+                                        -1);
+                }
+            }
+
+            closePrepareStatement(query, queryResult, finalData);
+
+            temp = (GtkWidget *) gtk_builder_get_object(builder, "leagueMoreDetailTeamTreeView");
+
+            if(temp != NULL)
+                g_signal_connect(G_OBJECT(temp), "row-activated", G_CALLBACK(displayTeamDetail), (gpointer) allParam->allCalbackParam);
+
+
+            /*
+             * Match list store update
+             */
+            query = prepareQuery(allParam->allCalbackParam->mainParam->databaseInfo,
+                                 "SELECT\n"
+                                 "    \"Match\".Id AS \"idMatch\",\n"
+                                 "    T1.name AS \"homeTeamName\",\n"
+                                 "    T2.name AS \"outsideTeamName\",\n"
+                                 "    \"Match\".date AS \"matchDate\"\n"
+                                 "FROM \"Match\"\n"
+                                 "JOIN \"Team\" AS T1 ON \"Match\".\"homeTeam\" = T1.id\n"
+                                 "JOIN \"Team\" AS T2 ON \"Match\".\"outsideTeam\" = T2.id\n"
+                                 "WHERE \"Match\".\"idLeague\" = $1"
+                                 "  AND date >= now()");
+
+            bindParam(query, allParam->id, 0);
+
+            queryResult = executePrepareStatement(query);
+
+            if(queryResult->error != 1){
+                fetchAllResult(queryResult, &finalData);
+
+                listStore = (GtkWidget *) gtk_builder_get_object(builder, "matchListStore");
+
+                for (int i = 0; i < queryResult->numberOfrow; ++i) {
+                    gtk_list_store_append(GTK_LIST_STORE(listStore), &iter);
+                    gtk_list_store_set(GTK_LIST_STORE(listStore), &iter,
+                                       0, finalData[i][0],
+                                       1, finalData[i][1],
+                                       2, finalData[i][2],
+                                       3, finalData[i][3],
+                                       -1);
+                }
+            }
+
+            closePrepareStatement(query, queryResult, finalData);
+
+        }
+
+
+        if(window != NULL)
+            gtk_widget_show_all(window);
+
+
+
 
     }else{
         printf("%s \n", error->message);
