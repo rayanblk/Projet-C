@@ -32,4 +32,8 @@ void displayTeamDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewC
 
 void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
 
+void openAddNewPlayerForm(GtkWidget * widget, gpointer * data);
+
+void createNewTeam (GtkWidget * widget, gpointer * data);
+
 #endif //PROJET_C_CALLBACK_H

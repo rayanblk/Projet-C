@@ -514,12 +514,52 @@ void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
 
     button = (GtkWidget *) gtk_builder_get_object(builder, "teamAddFormCreateButton");
 
-    /*if(button != NULL)
-        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewLeague), newParam);*/
+    mainParam->mainParam = newParam;
+
+    if(button != NULL)
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewTeam), mainParam);
 
 
     gtk_widget_show_all(window);
 }
+
+void openAddNewPlayerForm(GtkWidget * widget, gpointer * data){
+
+    AllTabParam * mainParam = (AllTabParam *) data;
+    CallbackParam * newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
+    GtkWidget * window;
+    GtkBuilder * builder;
+    GtkWidget * button;
+
+    newParam->mainParam = mainParam->mainParam->mainParam;
+    strcpy(newParam->fileName,mainParam->mainParam->fileName);
+    newParam->function  = mainParam->mainParam->function;
+    strcpy(newParam->objectLabel,mainParam->mainParam->objectLabel);
+    strcpy(newParam->parentName,mainParam->mainParam->parentName);
+    strcpy(newParam->objectName,mainParam->mainParam->objectName);
+
+    loadGladeFile(&builder, "formWidget/newPlayerForm.glade");
+
+    newParam->builder = builder;
+
+    window = (GtkWidget *) gtk_builder_get_object(builder, "playerAddForm");
+
+    button = (GtkWidget *) gtk_builder_get_object(builder, "playerAddFormCloseButton");
+
+    if(button != NULL)
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(closeDialogBox), window);
+
+
+    button = (GtkWidget *) gtk_builder_get_object(builder, "playerAddFormCreateButton");
+
+    /*if(button != NULL)
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewTeam), newParam);*/
+
+
+    gtk_widget_show_all(window);
+}
+
+
 
 void closeDialogBox (GtkWidget * widget, gpointer * data) {
     GtkWidget * window = (GtkWidget *) data;
@@ -527,77 +567,159 @@ void closeDialogBox (GtkWidget * widget, gpointer * data) {
     gtk_widget_destroy(window);
 
 
-};
+}
 
 void createNewLeague (GtkWidget * widget, gpointer * data) {
-    AllTabParam * allParam = (AllTabParam *) data;
-    GtkWidget * allEntry;
-    GtkWidget * currentBox;
-    int numberOfElement = 0;
-    char * param = 0;
-    GtkWidget * label;
-    char * statement;
-    PrepareStatement * query;
-    QueryStatement * queryResult;
-
-
+    AllTabParam *allParam = (AllTabParam *) data;
+    GtkWidget *allEntry;
+    GtkWidget *currentBox;
+    char *param = 0;
+    GtkWidget *label;
+    char *statement;
+    PrepareStatement *query;
+    QueryStatement *queryResult;
 
 
     allEntry = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormNameEntry");
 
-    currentBox = (GtkWidget * )gtk_builder_get_object(allParam->mainParam->builder,"leagueAddFormBox");
+    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormBox");
 
 
-    if(strlen(param = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry))) <= 0){
+    if (strlen(param = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry))) <= 0) {
 
 
-        if((label = findChild(currentBox,"errorLabelName")) == NULL) {
+        if ((label = findChild(currentBox, "errorLabelName")) == NULL) {
             label = gtk_label_new("Verify league's name");
-            gtk_widget_set_name(label,"errorLabelName");
-            gtk_box_pack_start(GTK_BOX(currentBox), label,TRUE,TRUE,2);
-        } else{
-            gtk_label_set_label(GTK_LABEL(label),"Verify league's name");
+            gtk_widget_set_name(label, "errorLabelName");
+            gtk_box_pack_start(GTK_BOX(currentBox), label, TRUE, TRUE, 2);
+        } else {
+            gtk_label_set_label(GTK_LABEL(label), "Verify league's name");
         }
 
         gtk_widget_show_all(currentBox);
 
-    }else{
-        if((label = findChild(currentBox,"errorLabelName")) != NULL){
+    } else {
+        if ((label = findChild(currentBox, "errorLabelName")) != NULL) {
             gtk_widget_destroy(label);
         }
 
 
         statement = "INSERT INTO  \"League\" (name) VALUES ($1) ";
-        query =  prepareQuery(allParam->mainParam->mainParam->databaseInfo,statement);
-        bindParam(query,param,0);
+        query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
+        bindParam(query, param, 0);
         queryResult = executePrepareStatement(query);
 
 
-        if(queryResult->error == 1){
-            if((label = findChild(currentBox, "errorLabelName")) == NULL) {
+        if (queryResult->error == 1) {
+            if ((label = findChild(currentBox, "errorLabelName")) == NULL) {
                 label = gtk_label_new("Cannot insert in database");
                 gtk_widget_set_name(label, "errorLabelName");
 
-                gtk_box_pack_start(GTK_BOX(currentBox), label , TRUE ,TRUE,2);
-            }else{
+                gtk_box_pack_start(GTK_BOX(currentBox), label, TRUE, TRUE, 2);
+            } else {
                 gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");
             }
 
             gtk_widget_show_all(currentBox);
 
-        }else{
-            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder,"leagueAddForm"));
+        } else {
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
 
         }
-        closePrepareStatement(query,queryResult,NULL);
+        closePrepareStatement(query, queryResult, NULL);
 
         /*
          * Refresh list store
          */
     }
-};
+}
+
+void createNewTeam (GtkWidget * widget, gpointer * data) {
+    AllTabParam * allParam = (AllTabParam *) data;
+    GtkWidget * allEntry [3];
+    GtkWidget * currentBox;
+    char * param [3] = {0};
+    GtkWidget * label;
+    char * statement;
+    PrepareStatement * query;
+    QueryStatement * queryResult;
+    char errorMessage[1000] = {0};
+
+    allEntry [0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormNameEntry");
+    allEntry [1] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormCityEntry");
+    allEntry [2] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormStadiumEntry");
+    //allEntry [0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormLeagueEntry");
+
+    currentBox = (GtkWidget * )gtk_builder_get_object(allParam->mainParam->builder,"teamAddFormBox");
+
+    if (strlen(param[0] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[0]))) <= 0)
+        strcat(errorMessage,"Verify team's name \n");
+
+    if (strlen(param[1] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[1]))) <= 0)
+        strcat(errorMessage,"Verify team's city \n");
+
+    if (strlen(param[2] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[2]))) <= 0)
+        strcat(errorMessage,"Verify team's stadium \n");
+
+
+
+
+    if(strlen(errorMessage) > 0) {
+
+
+        if((label = findChild(currentBox,"errorLabelName")) == NULL) {
+            label = gtk_label_new(errorMessage);
+            gtk_widget_set_name(label,"errorLabelName");
+            gtk_box_pack_start(GTK_BOX(currentBox), label,TRUE,TRUE,2);
+        } else{
+            gtk_label_set_label(GTK_LABEL(label),errorMessage);
+        }
+
+        gtk_widget_show_all(currentBox);
+
+    }else {
+        if ((label = findChild(currentBox, "errorLabelName")) != NULL) {
+            gtk_widget_destroy(label);
+        }
+
+
+        statement = "INSERT INTO  \"Team\" (name,city,stadium) VALUES ($1,$2,$3) ";
+        query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
+        bindParam(query, param[0], 0);
+        bindParam(query, param[1], 1);
+        bindParam(query, param[2], 2);
+        queryResult = executePrepareStatement(query);
+
+
+        if (queryResult->error == 1) {
+            if ((label = findChild(currentBox, "errorLabelName")) == NULL) {
+                label = gtk_label_new("Cannot insert in database");
+                gtk_widget_set_name(label, "errorLabelName");
+
+                gtk_box_pack_start(GTK_BOX(currentBox), label, TRUE, TRUE, 2);
+            } else {
+                gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");
+            }
+
+            gtk_widget_show_all(currentBox);
+
+        } else {
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddForm"));
+
+            tabSearch(widget, (gpointer *) allParam->searchParam);
+
+        }
+        closePrepareStatement(query, queryResult, NULL);
+
+
+        /*
+         * Refresh list store
+         */
+    }
+}
+
 
 void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data){
     GtkTreeIter iter;
