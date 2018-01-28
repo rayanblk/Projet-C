@@ -673,3 +673,104 @@ void displayLeagueDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
 
 
 }
+
+void displayTeamDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data){
+    GtkTreeIter iter;
+    GtkTreeModel * model;
+    char * test;
+    CallbackParam * allParam = (CallbackParam *) data;
+    GError * error = NULL;
+    GtkWidget * window = NULL;
+    GtkWidget * tempWidget = NULL;
+    PrepareStatement * query = NULL;
+    QueryStatement * resultQuery = NULL;
+    char ** finalData = NULL;
+
+    model = gtk_tree_view_get_model(treeView);
+    gtk_tree_model_get_iter(model, &iter, path);
+
+
+    /*
+     * Get the dialog box
+     * Display the value
+     */
+    if((error = loadGladeFile(&allParam->builder, "detailWidget/teamDetail.glade")) == NULL){
+
+        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailWindow");
+
+        if(window != NULL){
+            gtk_widget_show_all(window);
+
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailIdValue");
+            gtk_tree_model_get(model, &iter, 0, &test, -1);
+            printf("%s \n ", test);
+            gtk_label_set_label(GTK_LABEL(tempWidget), test);
+
+            query = prepareQuery(allParam->mainParam->databaseInfo,
+                        "SELECT"
+                            "\"Team\".id,"
+                            "\"Team\".name,"
+                            "\"Team\".city,"
+                            "\"League\".Name AS \"leagueName\","
+                            "\"Team\".stadium,"
+                            "to_char(\"Team\".\"dateAdd\", 'YYYY-MM-DD') AS \"dateCreate\","
+                            "to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
+                        "FROM \"Team\""
+                        "JOIN \"League\" ON \"Team\".idLeague = \"League\".id\n"
+                        "WHERE \"Team\".id = $1");
+
+            bindParam(query, test, 0);
+
+            resultQuery = executePrepareStatement(query);
+
+            if(resultQuery->error != 1) {
+
+                fetchResult(resultQuery, &finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailNameValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailCityValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[2]);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailLeagueValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[3]);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailStadiumValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[4]);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailDateCreateValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[5]);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailDateUpdateValue");
+
+                if(tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[6]);
+
+                closePrepareStatement(query, resultQuery, (char ***) finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamDetailCloseButton");
+
+                if(tempWidget != NULL)
+                    g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(closeDialogBox), (gpointer) window);
+
+            }
+        }
+
+    }else{
+        printf("%s \n", error->message);
+        g_error_free(error);
+    }
+
+}
