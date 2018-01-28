@@ -213,7 +213,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
                                     "\"Team\".city,"
                                     "\"League\".Name AS \"leagueName\","
                                     "\"Team\".stadium,"
-                                    "to_char(\"Team\".dateUpdate, 'YYYY-MM-DD') AS \"dateUpdate\""
+                                    "to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
                                     "FROM \"Team\""
                                     "  JOIN \"League\" ON \"Team\".idLeague = \"League\".id");
 
@@ -287,7 +287,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
         if(button != NULL)
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), mainParam);
 
-        button = (GtkWidget *) gtk_builder_get_object(data->builder, "leagueTabAddButton");
+        button = (GtkWidget *) gtk_builder_get_object(data->builder, "teamTabNewButton");
 
         completeTabParam->mainParam = data;
         completeTabParam->searchParam = mainParam;
@@ -295,19 +295,13 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
         if(button != NULL)
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewTeamForm), (gpointer) completeTabParam);
 
+
+        tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "teamTreeView");
+
+        if(tempView != NULL)
+            g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayTeamDetail), (gpointer) data);
+
     }
-
-
-    button = (GtkWidget *) gtk_builder_get_object(data->builder, "teamTabNewButton");
-
-    if(button != NULL) {
-        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewTeamForm), data);
-    }
-
-    tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "leagueTreeView");
-
-    if(tempView != NULL)
-        g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayLeagueDetail), (gpointer) data);
 }
 
 
