@@ -6,9 +6,21 @@
     <columns>
       <!-- column-name Id -->
       <column type="gchararray"/>
-      <!-- column-name Home team -->
+      <!-- column-name Home -->
       <column type="gchararray"/>
-      <!-- column-name Outside team -->
+      <!-- column-name Outside -->
+      <column type="gchararray"/>
+      <!-- column-name Stadium -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="teamListStore">
+    <columns>
+      <!-- column-name Id -->
+      <column type="gchararray"/>
+      <!-- column-name Name -->
+      <column type="gchararray"/>
+      <!-- column-name City -->
       <column type="gchararray"/>
       <!-- column-name Stadium -->
       <column type="gchararray"/>
@@ -60,6 +72,7 @@
                 <child>
                   <object class="GtkTreeViewColumn" id="idColumn">
                     <property name="title" translatable="yes">Id</property>
+                    <property name="expand">True</property>
                     <property name="alignment">0.5</property>
                     <child>
                       <object class="GtkCellRendererText" id="cellTextId"/>
@@ -181,7 +194,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellTextHomeTeam1"/>
                       <attributes>
-                        <attribute name="text">0</attribute>
+                        <attribute name="text">1</attribute>
                       </attributes>
                     </child>
                   </object>
@@ -238,17 +251,5 @@
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="teamListStore">
-    <columns>
-      <!-- column-name Id -->
-      <column type="gchararray"/>
-      <!-- column-name Name -->
-      <column type="gchararray"/>
-      <!-- column-name City -->
-      <column type="gchararray"/>
-      <!-- column-name Stadium -->
-      <column type="gchararray"/>
-    </columns>
   </object>
 </interface>
