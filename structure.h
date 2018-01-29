@@ -29,7 +29,7 @@ typedef struct TabSearchParam{
 } TabSearchParam;
 
 typedef struct TabSearch{
-    char statement[250];
+    char statement[450];
     char listStoreId[250];
     GtkBuilder * builder;
     int numberOfParam;
