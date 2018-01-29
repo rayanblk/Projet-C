@@ -367,6 +367,11 @@ void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
     GtkWidget * window;
     GtkBuilder * builder;
     GtkWidget * button;
+    GtkListStore * listStore;
+    QueryStatement * exec;
+    char *** finalData = NULL;
+    GtkTreeIter tempIter;
+
 
     newParam->mainParam = mainParam->mainParam->mainParam;
     strcpy(newParam->fileName,mainParam->mainParam->fileName);
@@ -393,6 +398,26 @@ void openAddNewTeamForm(GtkWidget * widget, gpointer * data){
 
     if(button != NULL)
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewTeam), mainParam);
+
+
+    exec = query(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
+                                                                        "id,\n"
+                                                                        "      name\n"
+                                                                        "FROM \"League\";");
+
+    fetchAllResult(exec,&finalData);
+
+    listStore = (GtkListStore * ) gtk_builder_get_object(builder,"leagueStore");
+
+    for (int i = 0; i < exec->numberOfrow; ++i) {
+
+        gtk_list_store_append(listStore, &tempIter);
+        gtk_list_store_set(listStore, &tempIter
+                , 0, finalData[i][0]
+                , 1, finalData[i][1]
+                , -1);
+    }
+
 
 
     gtk_widget_show_all(window);
@@ -513,9 +538,9 @@ void createNewLeague (GtkWidget * widget, gpointer * data) {
 
 void createNewTeam (GtkWidget * widget, gpointer * data) {
     AllTabParam * allParam = (AllTabParam *) data;
-    GtkWidget * allEntry [3];
+    GtkWidget * allEntry [4];
     GtkWidget * currentBox;
-    char * param [3] = {0};
+    char * param [4] = {0};
     GtkWidget * label;
     char * statement;
     PrepareStatement * query;
@@ -525,7 +550,9 @@ void createNewTeam (GtkWidget * widget, gpointer * data) {
     allEntry [0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormNameEntry");
     allEntry [1] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormCityEntry");
     allEntry [2] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormStadiumEntry");
-    //allEntry [0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormLeagueEntry");
+    allEntry [3] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormLeagueComboBox");
+
+
 
     currentBox = (GtkWidget * )gtk_builder_get_object(allParam->mainParam->builder,"teamAddFormBox");
 
@@ -537,6 +564,10 @@ void createNewTeam (GtkWidget * widget, gpointer * data) {
 
     if (strlen(param[2] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[2]))) <= 0)
         strcat(errorMessage,"Verify team's stadium \n");
+
+
+    if ((param[3] = (char *) gtk_combo_box_get_active_id(GTK_COMBO_BOX(allEntry[3]))) == NULL || strlen(param[3]) <= 0)
+        strcat(errorMessage,"Verify team's league \n");
 
 
 
@@ -560,11 +591,12 @@ void createNewTeam (GtkWidget * widget, gpointer * data) {
         }
 
 
-        statement = "INSERT INTO  \"Team\" (name,city,stadium) VALUES ($1,$2,$3) ";
+        statement = "INSERT INTO  \"Team\" (name,city,stadium,\"idLeague\") VALUES ($1,$2,$3,$4) ";
         query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
         bindParam(query, param[0], 0);
         bindParam(query, param[1], 1);
         bindParam(query, param[2], 2);
+        bindParam(query, param[3], 3);
         queryResult = executePrepareStatement(query);
 
 
@@ -969,6 +1001,8 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
                                  "  AND date >= now()");
 
             bindParam(query, allParam->id, 0);
+
+            finalData = NULL;
 
             queryResult = executePrepareStatement(query);
 
