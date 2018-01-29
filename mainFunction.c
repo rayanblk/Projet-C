@@ -276,9 +276,9 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
                 "    \"Team\".city,"
                 "    \"League\".Name AS \"leagueName\","
                 "    \"Team\".stadium,"
-                "    to_char(\"Team\".dateUpdate, 'YYYY-MM-DD') AS \"dateUpdate\""
+                "    to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
                 "FROM \"Team\""
-                "JOIN \"League\" ON \"Team\".idLeague = \"League\".id");
+                "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id");
         mainParam->numberOfParam = 4;
         strcpy(mainParam->listStoreId, "teamListStore");
 
@@ -325,8 +325,8 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
                             "SELECT\n"
                                     "\"Player\".id,\n"
                                     "\"Player\".firstname || ' ' || \"Player\".lastname AS Name,\n"
-                                    "\"Position\".name as PositionName,\n"
                                     "\"Team\".name as TeamName,\n"
+                                    "\"Position\".acronym as PositionName,\n"
                                     "to_char(\"Player\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\"\n"
                                     "FROM \"Player\"\n"
                                     "JOIN \"Position\" ON \"Player\".\"idPosition\" = \"Position\".id\n"
@@ -343,8 +343,8 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
             gtk_list_store_set(listStore, &tempIter
                     , 0, finalData[i][0]
                     , 1, finalData[i][1]
-                    , 2, finalData[i][3]
-                    , 3, finalData[i][2]
+                    , 2, finalData[i][2]
+                    , 3, finalData[i][3]
                     , 4, finalData[i][4]
                     , -1);
         }
@@ -352,7 +352,7 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
         closeQuery(queryResult, finalData);
     }
 
-    /*
+
     if(tabParam != NULL && completeTabParam != NULL){
 
         tabParam[0] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
@@ -365,38 +365,41 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
 
         tabParam[1] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
         if(tabParam[1] != NULL){
-            strcpy(tabParam[1]->condition, "\"Player\".firstname ILIKE $");
+            strcpy(tabParam[1]->condition, "\"Player\".firstname || \"Player\".lastname  ILIKE $");
             tabParam[1]->typeCondition = 1;
-            strcpy(tabParam[1]->gtkEntryId, "firstnamePlayerEntry");
+            strcpy(tabParam[1]->gtkEntryId, "namePlayerEntry");
         }
 
         tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
         if(tabParam[2] != NULL){
-            strcpy(tabParam[2]->condition, "\"Player\".lasttname ILIKE $");
-            tabParam[2]->typeCondition = 2;
-            strcpy(tabParam[2]->gtkEntryId, "lastnamePlayerEntry");
+            strcpy(tabParam[2]->condition, "\"Team\".name ILIKE $");
+            tabParam[2]->typeCondition = 1;
+            strcpy(tabParam[2]->gtkEntryId, "teamPlayerEntry");
         }
 
         tabParam[3] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
         if(tabParam[3] != NULL){
-            strcpy(tabParam[3]->condition, "\"League\".name ILIKE $");
-            tabParam[3]->typeCondition = 2;
-            strcpy(tabParam[3]->gtkEntryId, "teamPlayerEntry");
+            strcpy(tabParam[3]->condition, "\"Position\".acronym ILIKE $");
+            tabParam[3]->typeCondition = 1;
+            strcpy(tabParam[3]->gtkEntryId, "positionPlayerEntry");
         }
+
 
         mainParam->allSearchParam = tabParam;
         mainParam->builder = data->builder;
         mainParam->mainParam = data->mainParam;
+
         strcpy(mainParam->statement,
-               "SELECT"
-                       "\"Player\".id,"
-                       "\"Player\".firstname || ' ' || \"Player\".lastname AS Name,"
-                       "\"Position\".name as PositionName,"
-                       "\"Team\".name as TeamName"
-                       "to_char(\"Player\".dateUpdate, 'YYYY-MM-DD') AS \"dateUpdate\""
-                       "FROM \"Player\""
-                       "JOIN \"Position\" ON \"Player\".idposition = \"Position\".id"
-                       "JOIN \"Team\" ON \"Player\".idteam = \"Team\".id");
+               "SELECT\n"
+                       "\"Player\".id,\n"
+                       "\"Player\".firstname || ' ' || \"Player\".lastname AS Name,\n"
+                       "\"Team\".name as TeamName,\n"
+                       "\"Position\".acronym as PositionName,\n"
+                       "to_char(\"Player\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\"\n"
+                       "FROM \"Player\"\n"
+                       "JOIN \"Position\" ON \"Player\".\"idPosition\" = \"Position\".id\n"
+                       "JOIN \"Team\" ON \"Player\".\"idTeam\" = \"Team\".id");
+
         mainParam->numberOfParam = 4;
         strcpy(mainParam->listStoreId, "playerListStore");
 
@@ -405,18 +408,23 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
         if(button != NULL)
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), mainParam);
 
-        button = (GtkWidget *) gtk_builder_get_object(data->builder, "playerTabAddButton");
+        button = (GtkWidget *) gtk_builder_get_object(data->builder, "playerTabNewButton");
 
         completeTabParam->mainParam = data;
         completeTabParam->searchParam = mainParam;
 
-        if(button != NULL)
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewLeagueForm), (gpointer) completeTabParam);
+        if(button != NULL) {
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm), (gpointer) completeTabParam);
 
-       }*/
-       tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "playerTreeView");
+
+        }
+
+        tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "playerTreeView");
 
         if(tempView != NULL)
             g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayPlayerDetail), (gpointer) data);
+
+       }
+
 }
 
