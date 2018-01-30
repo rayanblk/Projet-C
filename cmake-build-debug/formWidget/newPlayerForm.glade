@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.2 -->
+<!-- Generated with glade 3.18.3 -->
 <interface>
   <requires lib="gtk+" version="3.0"/>
+  <object class="GtkListStore" id="positionStore">
+    <columns>
+      <!-- column-name id -->
+      <column type="gchararray"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="teamStore">
+    <columns>
+      <!-- column-name id -->
+      <column type="gchararray"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkDialog" id="playerAddForm">
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
@@ -143,18 +159,22 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText" id="playerAddFormTeamEntry">
+                  <object class="GtkComboBox" id="palyerAddFormTeamComboBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">30</property>
-                    <property name="margin_right">30</property>
+                    <property name="resize_mode">immediate</property>
+                    <property name="model">teamStore</property>
                     <property name="active">0</property>
-                    <items>
-                      <item id="&lt;0&gt;" translatable="yes">Please select your team</item>
-                    </items>
+                    <property name="id_column">0</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="cellTextName"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
+                      </attributes>
+                    </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">5</property>
                   </packing>
@@ -173,18 +193,22 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText" id="playerAddFormLeagueEntry">
+                  <object class="GtkComboBox" id="palyerAddFormPositionComboBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">30</property>
-                    <property name="margin_right">30</property>
+                    <property name="resize_mode">immediate</property>
+                    <property name="model">positionStore</property>
                     <property name="active">0</property>
-                    <items>
-                      <item id="&lt;0&gt;" translatable="yes">Please select your league</item>
-                    </items>
+                    <property name="id_column">0</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="cellTextName1"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
+                      </attributes>
+                    </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">7</property>
                   </packing>
@@ -204,9 +228,6 @@
           </packing>
         </child>
       </object>
-    </child>
-    <child>
-      <placeholder/>
     </child>
   </object>
 </interface>

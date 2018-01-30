@@ -1038,4 +1038,17 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
         g_error_free(error);
     }
 
+    int nmb = 5;
+
+    int days = (nmb % 2 == 0) ? nmb -1 : nmb;
+    for (int i=0; i<days; i++) {
+        printf("Day %d : \n", i+1);
+        for (int j=0; j<nmb/2; j++) {
+            int t1 = (j+i) % nmb + 1;
+            int t2 = ((nmb - j -1) + i) % nmb + 1;
+            printf("Team %d v.s Team %d \n", t1, t2);
+        }
+    }
+
+
 }
