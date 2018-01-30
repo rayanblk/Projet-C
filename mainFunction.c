@@ -215,7 +215,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
                                     "\"Team\".stadium,"
                                     "to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
                                     "FROM \"Team\"\n"
-                                    "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id");
+                                    "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id ORDER BY name");
 
         fetchAllResult(queryResult, &finalData);
 

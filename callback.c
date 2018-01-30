@@ -430,6 +430,14 @@ void openAddNewPlayerForm(GtkWidget * widget, gpointer * data){
     GtkWidget * window;
     GtkBuilder * builder;
     GtkWidget * button;
+    GtkListStore * listStorePosition;
+    GtkListStore * listStoreTeam;
+    QueryStatement * exec;
+    char *** finalDataPosition = NULL;
+    char *** finalDataTeam = NULL;
+    GtkTreeIter tempIter;
+
+
 
     newParam->mainParam = mainParam->mainParam->mainParam;
     strcpy(newParam->fileName,mainParam->mainParam->fileName);
@@ -452,8 +460,51 @@ void openAddNewPlayerForm(GtkWidget * widget, gpointer * data){
 
     button = (GtkWidget *) gtk_builder_get_object(builder, "playerAddFormCreateButton");
 
-    /*if(button != NULL)
-        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewTeam), newParam);*/
+    mainParam->mainParam = newParam;
+
+    if(button != NULL)
+        g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewPlayer), mainParam);
+
+
+
+    exec = query(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
+            "id,\n"
+            "      name\n"
+            "FROM \"Position\";");
+
+    fetchAllResult(exec,&finalDataPosition);
+
+    listStorePosition = (GtkListStore * ) gtk_builder_get_object(builder,"positionStore");
+
+
+
+    for (int i = 0; i < exec->numberOfrow; ++i) {
+
+        gtk_list_store_append(listStorePosition, &tempIter);
+        gtk_list_store_set(listStorePosition, &tempIter
+                , 0, finalDataPosition[i][0]
+                , 1, finalDataPosition[i][1]
+                , -1);
+    }
+
+    exec = query(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
+            "id,\n"
+            "      name\n"
+            "FROM \"Team\";");
+
+    fetchAllResult(exec,&finalDataTeam);
+
+    listStoreTeam = (GtkListStore * ) gtk_builder_get_object(builder,"teamStore");
+
+    for (int i = 0; i < exec->numberOfrow; ++i) {
+
+        gtk_list_store_append(listStoreTeam, &tempIter);
+        gtk_list_store_set(listStoreTeam, &tempIter
+                , 0, finalDataTeam[i][0]
+                , 1, finalDataTeam[i][1]
+                , -1);
+    }
+
 
 
     gtk_widget_show_all(window);
@@ -614,6 +665,99 @@ void createNewTeam (GtkWidget * widget, gpointer * data) {
 
         } else {
             gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddForm"));
+
+            tabSearch(widget, (gpointer *) allParam->searchParam);
+
+        }
+        closePrepareStatement(query, queryResult, NULL);
+
+
+        /*
+         * Refresh list store
+         */
+    }
+}
+
+void createNewPlayer (GtkWidget * widget, gpointer * data) {
+    AllTabParam * allParam = (AllTabParam *) data;
+    GtkWidget * allEntry [4];
+    GtkWidget * currentBox;
+    char * param [4] = {0};
+    GtkWidget * label;
+    char * statement;
+    PrepareStatement * query;
+    QueryStatement * queryResult;
+    char errorMessage[1000] = {0};
+
+    allEntry [0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormFirstnameEntry");
+    allEntry [1] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormLastnameEntry");
+    allEntry [2] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormTeamComboBox");
+    allEntry [3] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormPositionComboBox");
+
+
+
+    currentBox = (GtkWidget * )gtk_builder_get_object(allParam->mainParam->builder,"playerAddFormBox");
+
+
+    if (strlen(param[0] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[0]))) <= 0)
+        strcat(errorMessage,"Verify player's firstname \n");
+
+    if (strlen(param[1] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[1]))) <= 0)
+        strcat(errorMessage,"Verify player's lastname \n");
+
+    if ((param[2] = (char *) gtk_combo_box_get_active_id(GTK_COMBO_BOX(allEntry[2]))) == NULL || strlen(param[2]) <= 0)
+        strcat(errorMessage,"Verify player's team \n");
+
+
+    if ((param[3] = (char *) gtk_combo_box_get_active_id(GTK_COMBO_BOX(allEntry[3]))) == NULL || strlen(param[3]) <= 0)
+        strcat(errorMessage,"Verify player's position \n");
+
+
+
+
+
+    if(strlen(errorMessage) > 0) {
+
+
+        if((label = findChild(currentBox,"errorLabelName")) == NULL) {
+            label = gtk_label_new(errorMessage);
+            gtk_widget_set_name(label,"errorLabelName");
+            gtk_box_pack_start(GTK_BOX(currentBox), label,TRUE,TRUE,2);
+        } else{
+            gtk_label_set_label(GTK_LABEL(label),errorMessage);
+        }
+
+        gtk_widget_show_all(currentBox);
+
+    }else {
+        if ((label = findChild(currentBox, "errorLabelName")) != NULL) {
+            gtk_widget_destroy(label);
+        }
+
+
+        statement = "INSERT INTO  \"Player\" (firstname,lastname,\"idTeam\",\"idPosition\") VALUES ($1,$2,$3,$4) ";
+        query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
+        bindParam(query, param[0], 0);
+        bindParam(query, param[1], 1);
+        bindParam(query, param[2], 2);
+        bindParam(query, param[3], 3);
+        queryResult = executePrepareStatement(query);
+
+
+        if (queryResult->error == 1) {
+            if ((label = findChild(currentBox, "errorLabelName")) == NULL) {
+                label = gtk_label_new("Cannot insert in database");
+                gtk_widget_set_name(label, "errorLabelName");
+
+                gtk_box_pack_start(GTK_BOX(currentBox), label, TRUE, TRUE, 2);
+            } else {
+                gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");
+            }
+
+            gtk_widget_show_all(currentBox);
+
+        } else {
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
 
