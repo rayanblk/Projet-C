@@ -932,6 +932,7 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
     GtkBuilder* builder = NULL;
     GtkWidget * window = NULL;
     GtkWidget * temp = NULL;
+    WindowCalendarParam ** calendarParam = (WindowCalendarParam **) malloc(2 * sizeof(WindowCalendarParam *));
     GtkTreeIter iter;
     GtkWidget * listStore = NULL;
     GError * error = NULL;
@@ -1024,6 +1025,46 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
 
             closePrepareStatement(query, queryResult, finalData);
 
+            /*
+             * League param tab
+             */
+            temp = (GtkWidget * ) gtk_builder_get_object(builder, "firstDateEntry");
+
+            calendarParam[0] = (WindowCalendarParam *) malloc(1 * sizeof(WindowCalendarParam));
+
+            if(calendarParam[0] != NULL){
+                strcpy(calendarParam[0]->fileName, "leagueDetail/main.glade");
+                strcpy(calendarParam[0]->calendarWindowId, "calendarWindow");
+                strcpy(calendarParam[0]->calendarId, "mainCalendar");
+                calendarParam[0]->destinationWidget = temp;
+                calendarParam[0]->calendarWindow = NULL;
+            }
+
+
+            if(temp != NULL)
+                g_signal_connect(G_OBJECT(temp), "icon-press", G_CALLBACK(openCalendar), (gpointer *) calendarParam[0]);
+
+            temp = (GtkWidget * ) gtk_builder_get_object(builder, "secondDateEntry");
+
+            calendarParam[1] = (WindowCalendarParam *) malloc(1 * sizeof(WindowCalendarParam));
+
+            if(calendarParam[1] != NULL){
+                strcpy(calendarParam[1]->fileName, "leagueDetail/main.glade");
+                strcpy(calendarParam[1]->calendarWindowId, "calendarWindow");
+                strcpy(calendarParam[1]->calendarId, "mainCalendar");
+                calendarParam[1]->destinationWidget = temp;
+                calendarParam[1]->calendarWindow = NULL;
+            }
+
+
+            if(temp != NULL)
+                g_signal_connect(G_OBJECT(temp), "icon-press", G_CALLBACK(openCalendar), (gpointer *) calendarParam[1]);
+
+
+            temp = (GtkWidget * ) gtk_builder_get_object(builder, "createButton");
+
+            if(temp != NULL)
+                g_signal_connect(G_OBJECT(temp), "clicked", G_CALLBACK(newLeagueMatch), (gpointer **) calendarParam);
         }
 
 
@@ -1038,17 +1079,142 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
         g_error_free(error);
     }
 
-    int nmb = 5;
+    /*int nmb = 5;
+    GDate * matchDate = NULL;
+    gchar s[20] = {0};
+
+    matchDate = g_date_new_dmy(27, G_DATE_JANUARY, 2018);
 
     int days = (nmb % 2 == 0) ? nmb -1 : nmb;
     for (int i=0; i<days; i++) {
         printf("Day %d : \n", i+1);
+        g_date_strftime(s, 20, "%d / %m / %Y", matchDate);
         for (int j=0; j<nmb/2; j++) {
             int t1 = (j+i) % nmb + 1;
             int t2 = ((nmb - j -1) + i) % nmb + 1;
-            printf("Team %d v.s Team %d \n", t1, t2);
+            printf("Team %d v.s Team %d %s \n", t1, t2, s);
         }
-    }
 
+        g_date_add_days(matchDate, 7);
+    }*/
+
+
+}
+
+void openCalendar (GtkEntry * widget, GtkEntryIconPosition iconPos, GdkEvent *event, gpointer * data){
+    GtkBuilder * builder = NULL;
+    GError * error = NULL;
+    GtkWidget * window = NULL;
+    GtkWidget * calendar = NULL;
+    WindowCalendarParam * calendarParam = (WindowCalendarParam *) data;
+
+    error = loadGladeFile(&builder, calendarParam->fileName);
+
+    if(error == NULL){
+        window = (GtkWidget *) gtk_builder_get_object(builder, calendarParam->calendarWindowId);
+
+        if(window != NULL){
+
+            calendarParam->calendarWindow = window;
+
+            calendar = (GtkWidget *) gtk_builder_get_object(builder, calendarParam->calendarId);
+
+            if(calendar != NULL)
+                g_signal_connect(G_OBJECT(calendar), "day-selected-double-click", G_CALLBACK(daySelect), calendarParam);
+
+            gtk_widget_show_all(window);
+        }else{
+            printf("No window to display");
+        }
+    }else{
+        printf("%s \n", error->message);
+        g_error_free(error);
+    }
+}
+
+void daySelect(GtkCalendar * calendar, gpointer * data){
+    WindowCalendarParam * calendarParam = (WindowCalendarParam *) data;
+    guint year = 0;
+    guint day = 0;
+    guint month = 0;
+    gchar tempChar[250];
+
+    gtk_calendar_get_date(calendar, &year, &month, &day);
+
+    gtk_widget_destroy(calendarParam->calendarWindow);
+
+    sprintf(tempChar, "%d-%02d-%02d", year, month + 1, day);
+
+    gtk_entry_set_text(GTK_ENTRY(calendarParam->destinationWidget), tempChar);
+}
+
+
+void newLeagueMatch(GtkWidget * widget, gpointer ** data) {
+    WindowCalendarParam **allParam = (WindowCalendarParam **) data;
+    GtkWidget *entry[2] = {NULL};
+    GDate *date[2] = {NULL};
+    GDate *currentDay;
+    int day = -1, month = -1, year = -1;
+    char *tempChar = NULL;
+    char * entryChar = malloc(200 * sizeof(char));
+    const GDateMonth monthNames[] = {G_DATE_JANUARY, G_DATE_FEBRUARY, G_DATE_MARCH, G_DATE_APRIL, G_DATE_MAY, G_DATE_JUNE, G_DATE_JULY, G_DATE_AUGUST, G_DATE_SEPTEMBER, G_DATE_OCTOBER, G_DATE_NOVEMBER, G_DATE_DECEMBER};
+
+    entry[0] = allParam[0]->destinationWidget;
+    entry[1] = allParam[1]->destinationWidget;
+
+    /*
+     * Get the date of the first entry
+     * Each - we put an \0 to cut the string
+     */
+    strcpy(entryChar, (char *) gtk_entry_get_text(GTK_ENTRY(entry[0])));
+
+    tempChar = strchr(entryChar, '-');
+
+    if (tempChar != NULL)
+        *tempChar = '\000';
+
+    year = strtol(entryChar, (char **) NULL, 10);
+
+    entryChar = tempChar +1;
+    tempChar = strchr(entryChar, '-');
+
+    if (tempChar != NULL)
+        *tempChar = '\000';
+
+    month = strtol(entryChar, (char **) NULL, 10);
+
+    day = strtol(tempChar +1, (char **) NULL, 10);
+
+    date[0] = g_date_new_dmy((GDateDay) day, (GDateMonth) monthNames[month - 1], (GDateYear) year);
+
+    /*
+     * Get the date of the second entry
+     * Each - we put an \0 to cut the string
+     */
+    strcpy(entryChar, (char *) gtk_entry_get_text(GTK_ENTRY(entry[1])));
+
+    tempChar = strchr(entryChar, '-');
+
+    if (tempChar != NULL)
+        *tempChar = '\000';
+
+    year = strtol(entryChar, (char **) NULL, 10);
+
+    entryChar = tempChar +1;
+    tempChar = strchr(entryChar, '-');
+
+    if (tempChar != NULL)
+        *tempChar = '\000';
+
+    month = strtol(entryChar, (char **) NULL, 10);
+
+    day = strtol(tempChar +1, (char **) NULL, 10);
+
+    /*
+     * Compare the two date
+     * If return  =0 error date are equal
+     * IF return > 0 error date 1 is superior to date 2
+     */
+    date[1] = g_date_new_dmy((GDateDay) day, (GDateMonth) monthNames[month - 1], (GDateYear) year);
 
 }
