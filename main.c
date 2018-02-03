@@ -80,6 +80,20 @@ int main(int argc,char **argv) {
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
 
 
+
+        /*
+        * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
+        * Get the player details button, via glade file
+        * Connect the clicked action, to the add tab to notebook function, with the init structure
+        */
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "matchTab", "Match", "mainTabWidget/matchTabContent.glade", initMatchTreeView, &allNotebookParam, mainParam);
+
+        button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageMatchButton");
+
+        if(button != NULL)
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
+
+
         /*
          * Show all child widget of main Window
          */

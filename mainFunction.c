@@ -215,7 +215,7 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
                                     "\"Team\".stadium,"
                                     "to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
                                     "FROM \"Team\"\n"
-                                    "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id");
+                                    "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id ORDER BY name");
 
         fetchAllResult(queryResult, &finalData);
 
@@ -428,3 +428,125 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
 
 }
 
+
+void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
+    GtkListStore *listStore = NULL;
+    GtkWidget * button = NULL;
+    GtkTreeIter tempIter;
+    QueryStatement * queryResult = NULL;
+    char *** finalData = NULL;
+    TabSearchParam ** tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
+    TabSearch * mainParam = (TabSearch *) malloc(sizeof(TabSearch));
+    AllTabParam * completeTabParam = (AllTabParam *) malloc(sizeof(AllTabParam));
+    GtkTreeView * tempView = NULL;
+
+
+    listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "matchListStore");
+
+    if(data->mainParam->databaseInfo->error != 1) {
+
+        queryResult = query(data->mainParam->databaseInfo,
+                            "SELECT \"Match\".id,\n"
+                                    "\"HomeTeam\".\"name\" || ' vs '|| \"OutsideTeam\".\"name\" AS name,\n"
+                                    "\"Match\".\"numberOfGoalHomeTeam\"|| '-' || \"Match\".\"numberOfGoalOutsideTeam\" AS goals,\n"
+                                    " \"Match\".\"stadium\",\n"
+                                    " \"Match\".\"dateUpdate\"\n"
+                                    "FROM \"Match\"\n"
+                                    "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
+                                    "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id");
+
+        fetchAllResult(queryResult, &finalData);
+
+
+
+
+        for (int i = 0; i < queryResult->numberOfrow; ++i) {
+
+            gtk_list_store_append(listStore, &tempIter);
+            gtk_list_store_set(listStore, &tempIter
+                    , 0, finalData[i][0]
+                    , 1, finalData[i][1]
+                    , 2, finalData[i][2]
+                    , 3, finalData[i][3]
+                    , 4, finalData[i][4]
+                    , -1);
+        }
+
+        closeQuery(queryResult, finalData);
+    }
+
+
+    if(tabParam != NULL && completeTabParam != NULL) {
+
+        tabParam[0] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if (tabParam[0] != NULL) {
+
+            strcpy(tabParam[0]->condition, "\"Match\".id = $");
+            tabParam[0]->typeCondition = 0;
+            strcpy(tabParam[0]->gtkEntryId, "idMatchEntry");
+        }
+
+        tabParam[1] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if (tabParam[1] != NULL) {
+            strcpy(tabParam[1]->condition, "\"HomeTeam\".name || \"OutsideTeam\".name  ILIKE $");
+            tabParam[1]->typeCondition = 1;
+            strcpy(tabParam[1]->gtkEntryId, "nameNameEntry");
+        }
+
+        /*
+        tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if (tabParam[2] != NULL) {
+            strcpy(tabParam[2]->condition, "\"Team\".name ILIKE $");
+            tabParam[2]->typeCondition = 1;
+            strcpy(tabParam[2]->gtkEntryId, "teamPlayerEntry");
+        }
+
+        tabParam[3] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if (tabParam[3] != NULL) {
+            strcpy(tabParam[3]->condition, "\"Position\".acronym ILIKE $");
+            tabParam[3]->typeCondition = 1;
+            strcpy(tabParam[3]->gtkEntryId, "positionPlayerEntry");
+        }
+         */
+
+
+        mainParam->allSearchParam = tabParam;
+        mainParam->builder = data->builder;
+        mainParam->mainParam = data->mainParam;
+
+        strcpy(mainParam->statement,
+               "SELECT \"Match\".id,\n"
+                       "\"HomeTeam\".\"name\" || ' vs '|| \"OutsideTeam\".\"name\" AS name,\n"
+                       "\"Match\".\"numberOfGoalHomeTeam\"|| '-' || \"Match\".\"numberOfGoalOutsideTeam\" AS goals,\n"
+                       " \"Match\".\"stadium\",\n"
+                       " \"Match\".\"dateUpdate\"\n"
+                       "FROM \"Match\"\n"
+                       "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
+                       "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id");
+
+        mainParam->numberOfParam = 2;
+
+        strcpy(mainParam->listStoreId, "matchListStore");
+
+        button = (GtkWidget *) gtk_builder_get_object(data->builder, "matchSearchButton");
+
+        if (button != NULL){
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), mainParam);
+        }
+
+
+
+        completeTabParam->mainParam = data;
+        completeTabParam->searchParam = mainParam;
+
+
+
+        }
+
+        tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "matchTreeView");
+
+        if (tempView != NULL) {
+            g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayPlayerDetail), (gpointer) data);
+        }
+
+    }

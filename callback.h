@@ -40,6 +40,8 @@ void openAddNewPlayerForm(GtkWidget * widget, gpointer * data);
 
 void createNewTeam (GtkWidget * widget, gpointer * data);
 
+void createNewPlayer (GtkWidget * widget, gpointer * data);
+
 void openMoreDetailLeague(GtkWidget * widget, gpointer * data);
 
 
