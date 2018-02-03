@@ -1069,6 +1069,7 @@ void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeVie
 
 
 void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
+
     CallBackParamWithId * allParam = (CallBackParamWithId *) data;
     PrepareStatement * query = NULL;
     QueryStatement * queryResult = NULL;

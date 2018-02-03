@@ -6,11 +6,9 @@
     <columns>
       <!-- column-name Id -->
       <column type="gchararray"/>
-      <!-- column-name Name -->
+      <!-- column-name Team -->
       <column type="gchararray"/>
-      <!-- column-name City -->
-      <column type="gchararray"/>
-      <!-- column-name League -->
+      <!-- column-name Goals -->
       <column type="gchararray"/>
       <!-- column-name Stadium -->
       <column type="gchararray"/>
@@ -201,7 +199,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="teamSearchButton">
+          <object class="GtkButton" id="matchSearchButton">
             <property name="label" translatable="yes">Search</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -225,7 +223,7 @@
       <placeholder/>
     </child>
     <child>
-      <object class="GtkTreeView" id="teamTreeView">
+      <object class="GtkTreeView" id="matchTreeView">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="model">matchListStore</property>
@@ -245,12 +243,12 @@
           </object>
         </child>
         <child>
-          <object class="GtkTreeViewColumn" id="nameColumn">
-            <property name="title" translatable="yes">Name</property>
+          <object class="GtkTreeViewColumn" id="teamColumn">
+            <property name="title" translatable="yes">Team</property>
             <property name="expand">True</property>
             <property name="alignment">0.5</property>
             <child>
-              <object class="GtkCellRendererText" id="cellTextName"/>
+              <object class="GtkCellRendererText" id="cellTeam"/>
               <attributes>
                 <attribute name="text">1</attribute>
               </attributes>
@@ -258,12 +256,12 @@
           </object>
         </child>
         <child>
-          <object class="GtkTreeViewColumn" id="cityColumn">
-            <property name="title" translatable="yes">City</property>
+          <object class="GtkTreeViewColumn" id="goalColumn">
+            <property name="title" translatable="yes">Goal</property>
             <property name="expand">True</property>
             <property name="alignment">0.5</property>
             <child>
-              <object class="GtkCellRendererText" id="cellTextCity"/>
+              <object class="GtkCellRendererText" id="cellTextGoal"/>
               <attributes>
                 <attribute name="text">2</attribute>
               </attributes>
@@ -271,12 +269,12 @@
           </object>
         </child>
         <child>
-          <object class="GtkTreeViewColumn" id="leagueColumn">
-            <property name="title" translatable="yes">League</property>
+          <object class="GtkTreeViewColumn" id="stadiumColumn">
+            <property name="title" translatable="yes">Stadium</property>
             <property name="expand">True</property>
             <property name="alignment">0.5</property>
             <child>
-              <object class="GtkCellRendererText" id="cellTextLeague"/>
+              <object class="GtkCellRendererText" id="cellTextStadium"/>
               <attributes>
                 <attribute name="text">3</attribute>
               </attributes>
@@ -284,28 +282,15 @@
           </object>
         </child>
         <child>
-          <object class="GtkTreeViewColumn" id="stadiumColumn">
+          <object class="GtkTreeViewColumn" id="dateColumn">
             <property name="sizing">autosize</property>
-            <property name="title" translatable="yes">Stadium</property>
+            <property name="title" translatable="yes">Date</property>
             <property name="expand">True</property>
             <property name="alignment">0.5</property>
             <child>
-              <object class="GtkCellRendererText" id="cellTextStadium"/>
+              <object class="GtkCellRendererText" id="cellTextDate"/>
               <attributes>
                 <attribute name="text">4</attribute>
-              </attributes>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkTreeViewColumn" id="dateUpdateColumn">
-            <property name="title" translatable="yes">Date update</property>
-            <property name="expand">True</property>
-            <property name="alignment">0.5</property>
-            <child>
-              <object class="GtkCellRendererText" id="cellTextDateUpdate"/>
-              <attributes>
-                <attribute name="text">5</attribute>
               </attributes>
             </child>
           </object>
