@@ -164,65 +164,74 @@
               </packing>
             </child>
             <child>
-              <object class="GtkTreeView" id="leagueMoreDetailMatchTreeView">
+              <object class="GtkScrolledWindow" id="scrolledwindow1">
+                <property name="width_request">800</property>
+                <property name="height_request">600</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="margin_top">14</property>
-                <property name="model">matchListStore</property>
-                <property name="search_column">0</property>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection" id="treeview-selection6"/>
-                </child>
+                <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkTreeViewColumn" id="idMatchColumn">
-                    <property name="sizing">fixed</property>
-                    <property name="title" translatable="yes">Id</property>
-                    <property name="alignment">0.5</property>
-                    <child>
-                      <object class="GtkCellRendererText" id="cellTextId2"/>
-                      <attributes>
-                        <attribute name="text">0</attribute>
-                      </attributes>
+                  <object class="GtkTreeView" id="leagueMoreDetailMatchTreeView">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_top">14</property>
+                    <property name="model">matchListStore</property>
+                    <property name="search_column">0</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection" id="treeview-selection6"/>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="homeTeamColumn">
-                    <property name="title" translatable="yes">Home team</property>
-                    <property name="expand">True</property>
-                    <property name="alignment">0.5</property>
                     <child>
-                      <object class="GtkCellRendererText" id="cellTextHomeTeam1"/>
-                      <attributes>
-                        <attribute name="text">1</attribute>
-                      </attributes>
+                      <object class="GtkTreeViewColumn" id="idMatchColumn">
+                        <property name="sizing">fixed</property>
+                        <property name="title" translatable="yes">Id</property>
+                        <property name="alignment">0.5</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellTextId2"/>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="outsideTeamColumn">
-                    <property name="title" translatable="yes">Outside team</property>
-                    <property name="expand">True</property>
-                    <property name="alignment">0.5</property>
                     <child>
-                      <object class="GtkCellRendererText" id="cellTextOutisdeTeam1"/>
-                      <attributes>
-                        <attribute name="text">2</attribute>
-                      </attributes>
+                      <object class="GtkTreeViewColumn" id="homeTeamColumn">
+                        <property name="title" translatable="yes">Home team</property>
+                        <property name="expand">True</property>
+                        <property name="alignment">0.5</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellTextHomeTeam1"/>
+                          <attributes>
+                            <attribute name="text">1</attribute>
+                          </attributes>
+                        </child>
+                      </object>
                     </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="dateColumn">
-                    <property name="sizing">autosize</property>
-                    <property name="title" translatable="yes">Date</property>
-                    <property name="expand">True</property>
-                    <property name="alignment">0.5</property>
                     <child>
-                      <object class="GtkCellRendererText" id="cellTextDate1"/>
-                      <attributes>
-                        <attribute name="text">3</attribute>
-                      </attributes>
+                      <object class="GtkTreeViewColumn" id="outsideTeamColumn">
+                        <property name="title" translatable="yes">Outside team</property>
+                        <property name="expand">True</property>
+                        <property name="alignment">0.5</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellTextOutisdeTeam1"/>
+                          <attributes>
+                            <attribute name="text">2</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="dateColumn">
+                        <property name="sizing">autosize</property>
+                        <property name="title" translatable="yes">Date</property>
+                        <property name="expand">True</property>
+                        <property name="alignment">0.5</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cellTextDate1"/>
+                          <attributes>
+                            <attribute name="text">3</attribute>
+                          </attributes>
+                        </child>
+                      </object>
                     </child>
                   </object>
                 </child>

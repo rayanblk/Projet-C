@@ -1,6 +1,7 @@
 //
 // Created by mathi on 15/01/2018.
 //
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include "structure.h"
 #include "mainFunction.h"
@@ -46,6 +47,6 @@ void openCalendar(GtkEntry * widget, GtkEntryIconPosition iconPos, GdkEvent *eve
 
 void daySelect(GtkCalendar * calendar, gpointer * data);
 
-void newLeagueMatch(GtkWidget * widget, gpointer ** data);
+void newLeagueMatch(GtkWidget * widget, gpointer * data);
 
 #endif //PROJET_C_CALLBACK_H
