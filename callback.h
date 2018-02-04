@@ -1,6 +1,7 @@
 //
 // Created by mathi on 15/01/2018.
 //
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include "structure.h"
 #include "mainFunction.h"
@@ -42,5 +43,12 @@ void createNewTeam (GtkWidget * widget, gpointer * data);
 void createNewPlayer (GtkWidget * widget, gpointer * data);
 
 void openMoreDetailLeague(GtkWidget * widget, gpointer * data);
+
+
+void openCalendar(GtkEntry * widget, GtkEntryIconPosition iconPos, GdkEvent *event, gpointer * user_data);
+
+void daySelect(GtkCalendar * calendar, gpointer * data);
+
+void newLeagueMatch(GtkWidget * widget, gpointer * data);
 
 #endif //PROJET_C_CALLBACK_H

@@ -98,14 +98,14 @@ PrepareStatement * prepareQuery(DatabaseConnector * databaseConnector, char * st
 }
 
 void bindParam(PrepareStatement * prepareStatement, char * param, int position){
+
     if(prepareStatement->allParam == NULL){
         prepareStatement->allParam = g_list_prepend(prepareStatement->allParam, (gpointer) param);
     }else if(g_list_nth(prepareStatement->allParam, (guint) position + 1) == NULL){
-        prepareStatement->allParam = g_list_append(prepareStatement->allParam, (gpointer) param);
+        prepareStatement->allParam = g_list_prepend(prepareStatement->allParam, (gpointer) param);
     }else{
-        prepareStatement->allParam = g_list_insert_before(prepareStatement->allParam, g_list_nth(prepareStatement->allParam, (guint) position +1), (gpointer) param);
+        prepareStatement->allParam = g_list_insert(prepareStatement->allParam, (gpointer) param, g_list_length(prepareStatement->allParam) - position);
     }
-
 }
 
 QueryStatement * executePrepareStatement(PrepareStatement * prepareStatement){
@@ -120,15 +120,19 @@ QueryStatement * executePrepareStatement(PrepareStatement * prepareStatement){
         if(g_list_length(prepareStatement->allParam) > 0){
             //prepareStatement->allParam = g_list_reverse(prepareStatement->allParam);
             allValue = (char **) malloc(sizeof(char *) * g_list_length(prepareStatement->allParam));
-            
+
+            prepareStatement->allParam = g_list_reverse(prepareStatement->allParam);
+
             if(allValue != NULL){
                 for (GList * i = prepareStatement->allParam; i != NULL; i = i->next, j++) {
+
+                    //printf("%d : %s \n", j ,(char *) i->data);
                     allValue[j] = (char *) i->data;
                 }
             }
         }
 
-        printf("%s \n", prepareStatement->query);
+        //printf("%s \n", prepareStatement->query);
         
         queryResult = PQexecParams(prepareStatement->connector->connector
                 , prepareStatement->query
@@ -157,7 +161,10 @@ QueryStatement * executePrepareStatement(PrepareStatement * prepareStatement){
                 mainQuery->PGResult = queryResult;
             }
         }
+
+        g_list_free(prepareStatement->allParam);
     }
+
 
     free(allValue);
 
