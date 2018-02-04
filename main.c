@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
+#include <curl/curl.h>
 #include "database.h"
 #include "callback.h"
 
@@ -92,6 +93,7 @@ int main(int argc,char **argv) {
 
         if(button != NULL)
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
+
 
 
         /*

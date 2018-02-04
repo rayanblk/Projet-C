@@ -435,7 +435,7 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
     GtkTreeIter tempIter;
     QueryStatement * queryResult = NULL;
     char *** finalData = NULL;
-    TabSearchParam ** tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
+    TabSearchParam ** tabParam = (TabSearchParam **) malloc(3 * sizeof(TabSearchParam *));
     TabSearch * mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     AllTabParam * completeTabParam = (AllTabParam *) malloc(sizeof(AllTabParam));
     GtkTreeView * tempView = NULL;
@@ -493,21 +493,16 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
             strcpy(tabParam[1]->gtkEntryId, "nameNameEntry");
         }
 
-        /*
+
         tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
         if (tabParam[2] != NULL) {
-            strcpy(tabParam[2]->condition, "\"Team\".name ILIKE $");
+            strcpy(tabParam[2]->condition, "\"Match\".\"dateUpdate\" ILIKE $");
             tabParam[2]->typeCondition = 1;
-            strcpy(tabParam[2]->gtkEntryId, "teamPlayerEntry");
+            strcpy(tabParam[2]->gtkEntryId, "dateMatchEntry");
         }
 
-        tabParam[3] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
-        if (tabParam[3] != NULL) {
-            strcpy(tabParam[3]->condition, "\"Position\".acronym ILIKE $");
-            tabParam[3]->typeCondition = 1;
-            strcpy(tabParam[3]->gtkEntryId, "positionPlayerEntry");
-        }
-         */
+
+
 
 
         mainParam->allSearchParam = tabParam;
@@ -524,7 +519,7 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
                        "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
                        "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id");
 
-        mainParam->numberOfParam = 2;
+        mainParam->numberOfParam = 3;
 
         strcpy(mainParam->listStoreId, "matchListStore");
 
