@@ -38,8 +38,9 @@ typedef struct TabSearch{
 } TabSearch;
 
 typedef struct AllTabParam{
-    CallbackParam * mainParam;
     TabSearch * searchParam;
+    GtkBuilder * builder;
+    MainParam * centralParam;
 } AllTabParam;
 
 typedef struct CallBackParamWithId{
