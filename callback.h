@@ -47,6 +47,8 @@ void createNewTeam (GtkWidget * widget, gpointer * data);
 
 void createNewPlayer (GtkWidget * widget, gpointer * data);
 
+void createNewStriker (GtkWidget * widget, gpointer * data);
+
 void openMoreDetailLeague(GtkWidget * widget, gpointer * data);
 
 
