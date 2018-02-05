@@ -428,7 +428,6 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
 
 }
 
-
 void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
     GtkListStore *listStore = NULL;
     GtkWidget * button = NULL;
@@ -541,7 +540,8 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
         tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "matchTreeView");
 
         if (tempView != NULL) {
-            g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayPlayerDetail), (gpointer) data);
+            g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayMatchDetail), (gpointer) data);
         }
 
     }
+
