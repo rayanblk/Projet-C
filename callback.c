@@ -319,27 +319,18 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
 void openAddNewLeagueForm(GtkWidget *widget, gpointer *data) {
 
     AllTabParam *mainParam = (AllTabParam *) data;
-    CallbackParam *newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
     GtkWidget *window;
     GtkBuilder *builder;
     GtkWidget *button;
     GError *error = NULL;
 
-    newParam->mainParam = mainParam->mainParam->mainParam;
-    strcpy(newParam->fileName, mainParam->mainParam->fileName);
-    newParam->function = mainParam->mainParam->function;
-    strcpy(newParam->objectLabel, mainParam->mainParam->objectLabel);
-    strcpy(newParam->parentName, mainParam->mainParam->parentName);
-    strcpy(newParam->objectName, mainParam->mainParam->objectName);
 
     error = loadGladeFile(&builder, "formWidget/newLeagueForm.glade");
 
     if (error != NULL)
         printf("%s \n", error->message);
 
-    newParam->builder = builder;
-
-    newParam->builder = builder;
+    mainParam->builder = builder;
 
     window = (GtkWidget *) gtk_builder_get_object(builder, "leagueAddForm");
 
@@ -351,7 +342,6 @@ void openAddNewLeagueForm(GtkWidget *widget, gpointer *data) {
 
     button = (GtkWidget *) gtk_builder_get_object(builder, "leagueAddFormCreateButton");
 
-    mainParam->mainParam = newParam;
 
     if (button != NULL)
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewLeague), (gpointer *) mainParam);
@@ -364,7 +354,6 @@ void openAddNewLeagueForm(GtkWidget *widget, gpointer *data) {
 void openAddNewTeamForm(GtkWidget *widget, gpointer *data) {
 
     AllTabParam *mainParam = (AllTabParam *) data;
-    CallbackParam *newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
     GtkWidget *window;
     GtkBuilder *builder;
     GtkWidget *button;
@@ -373,17 +362,9 @@ void openAddNewTeamForm(GtkWidget *widget, gpointer *data) {
     char ***finalData = NULL;
     GtkTreeIter tempIter;
 
-
-    newParam->mainParam = mainParam->mainParam->mainParam;
-    strcpy(newParam->fileName, mainParam->mainParam->fileName);
-    newParam->function = mainParam->mainParam->function;
-    strcpy(newParam->objectLabel, mainParam->mainParam->objectLabel);
-    strcpy(newParam->parentName, mainParam->mainParam->parentName);
-    strcpy(newParam->objectName, mainParam->mainParam->objectName);
-
     loadGladeFile(&builder, "formWidget/newTeamForm.glade");
 
-    newParam->builder = builder;
+    mainParam->builder = builder;
 
     window = (GtkWidget *) gtk_builder_get_object(builder, "teamAddForm");
 
@@ -395,16 +376,16 @@ void openAddNewTeamForm(GtkWidget *widget, gpointer *data) {
 
     button = (GtkWidget *) gtk_builder_get_object(builder, "teamAddFormCreateButton");
 
-    mainParam->mainParam = newParam;
 
     if (button != NULL)
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewTeam), mainParam);
 
 
-    exec = query(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
+    exec = query(mainParam->centralParam->databaseInfo, "SELECT\n"
             "id,\n"
             "      name\n"
             "FROM \"League\";");
+
 
     fetchAllResult(exec, &finalData);
 
@@ -423,7 +404,6 @@ void openAddNewTeamForm(GtkWidget *widget, gpointer *data) {
 void openAddNewPlayerForm(GtkWidget *widget, gpointer *data) {
 
     AllTabParam *mainParam = (AllTabParam *) data;
-    CallbackParam *newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
     GtkWidget *window;
     GtkBuilder *builder;
     GtkWidget *button;
@@ -434,17 +414,9 @@ void openAddNewPlayerForm(GtkWidget *widget, gpointer *data) {
     char ***finalDataTeam = NULL;
     GtkTreeIter tempIter;
 
-
-    newParam->mainParam = mainParam->mainParam->mainParam;
-    strcpy(newParam->fileName, mainParam->mainParam->fileName);
-    newParam->function = mainParam->mainParam->function;
-    strcpy(newParam->objectLabel, mainParam->mainParam->objectLabel);
-    strcpy(newParam->parentName, mainParam->mainParam->parentName);
-    strcpy(newParam->objectName, mainParam->mainParam->objectName);
-
     loadGladeFile(&builder, "formWidget/newPlayerForm.glade");
 
-    newParam->builder = builder;
+    mainParam->builder = builder;
 
     window = (GtkWidget *) gtk_builder_get_object(builder, "playerAddForm");
 
@@ -456,13 +428,12 @@ void openAddNewPlayerForm(GtkWidget *widget, gpointer *data) {
 
     button = (GtkWidget *) gtk_builder_get_object(builder, "playerAddFormCreateButton");
 
-    mainParam->mainParam = newParam;
-
     if (button != NULL)
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewPlayer), mainParam);
 
 
-    exec = query(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
+    exec = query(mainParam->centralParam->databaseInfo, "SELECT\n"
+
             "id,\n"
             "      name\n"
             "FROM \"Position\";");
@@ -478,7 +449,7 @@ void openAddNewPlayerForm(GtkWidget *widget, gpointer *data) {
         gtk_list_store_set(listStorePosition, &tempIter, 0, finalDataPosition[i][0], 1, finalDataPosition[i][1], -1);
     }
 
-    exec = query(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
+    exec = query(mainParam->centralParam->databaseInfo, "SELECT\n"
             "id,\n"
             "      name\n"
             "FROM \"Team\";");
@@ -507,18 +478,10 @@ void openAddNewStrikerForm(GtkWidget *widget, gpointer *data) {
     GtkListStore *listStoreStriker;
     GtkListStore *listStoreTeam;
     QueryStatement *exec;
-    PrepareStatement * query;
+    PrepareStatement *query;
     char ***finalDataStriker = NULL;
     char ***finalDataTeam = NULL;
     GtkTreeIter tempIter;
-
-
-    newParam->mainParam = mainParam->mainParam->mainParam;
-    strcpy(newParam->fileName, mainParam->mainParam->fileName);
-    newParam->function = mainParam->mainParam->function;
-    strcpy(newParam->objectLabel, mainParam->mainParam->objectLabel);
-    strcpy(newParam->parentName, mainParam->mainParam->parentName);
-    strcpy(newParam->objectName, mainParam->mainParam->objectName);
 
     loadGladeFile(&builder, "formWidget/newStriker.glade");
 
@@ -540,48 +503,48 @@ void openAddNewStrikerForm(GtkWidget *widget, gpointer *data) {
            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewPlayer), mainParam);
 
      */
-       query = prepareQuery(mainParam->mainParam->mainParam->databaseInfo,"SELECT\n"
-               "  \"Player\".id,\n"
-               "  \"Player\".firstname || ' ' || \"Player\".lastname AS \"fullName\"\n"
-               "FROM \"Match\", \"Player\"\n"
-               "WHERE \"Match\".\"id\" = $1\n"
-               "AND (\"Player\".\"idTeam\" = \"Match\".\"outsideTeam\" OR \"Player\".\"idTeam\" = \"Match\".\"homeTeam\")");
+    query = prepareQuery(mainParam->centralParam->databaseInfo, "SELECT\n"
+            "  \"Player\".id,\n"
+            "  \"Player\".firstname || ' ' || \"Player\".lastname AS \"fullName\"\n"
+            "FROM \"Match\", \"Player\"\n"
+            "WHERE \"Match\".\"id\" = $1\n"
+            "AND (\"Player\".\"idTeam\" = \"Match\".\"outsideTeam\" OR \"Player\".\"idTeam\" = \"Match\".\"homeTeam\")");
 
-        bindParam(query,mainParam->searchParam->id,0);
-        exec = executePrepareStatement(query);
+    bindParam(query, mainParam->searchParam->id, 0);
+    exec = executePrepareStatement(query);
 
     fetchAllResult(exec, &finalDataStriker);
 
     listStoreStriker = (GtkListStore *) gtk_builder_get_object(builder, "strikerStore");
 
 
-       for (int i = 0; i < exec->numberOfrow; ++i) {
+    for (int i = 0; i < exec->numberOfrow; ++i) {
 
-           gtk_list_store_append(listStoreStriker, &tempIter);
-           gtk_list_store_set(listStoreStriker, &tempIter, 0, finalDataStriker[i][0], 1, finalDataStriker[i][1], -1);
-       }
+        gtk_list_store_append(listStoreStriker, &tempIter);
+        gtk_list_store_set(listStoreStriker, &tempIter, 0, finalDataStriker[i][0], 1, finalDataStriker[i][1], -1);
+    }
 
-    closePrepareStatement(query,exec,finalDataStriker);
+    closePrepareStatement(query, exec, finalDataStriker);
 
-       query = prepareQuery(mainParam->mainParam->mainParam->databaseInfo, "SELECT\n"
-               "  \"Team\".id,\n"
-               "  \"Team\".name\n"
-               "FROM \"Match\", \"Team\"\n"
-               "WHERE \"Match\".id = $1\n"
-               "AND (\"Team\".id = \"Match\".\"outsideTeam\" OR \"Team\".id = \"Match\".\"homeTeam\")");
+    query = prepareQuery(mainParam->centralParam->databaseInfo, "SELECT\n"
+            "  \"Team\".id,\n"
+            "  \"Team\".name\n"
+            "FROM \"Match\", \"Team\"\n"
+            "WHERE \"Match\".id = $1\n"
+            "AND (\"Team\".id = \"Match\".\"outsideTeam\" OR \"Team\".id = \"Match\".\"homeTeam\")");
 
-        bindParam(query,mainParam->searchParam->id,0);
-        exec = executePrepareStatement(query);
+    bindParam(query, mainParam->searchParam->id, 0);
+    exec = executePrepareStatement(query);
 
-       fetchAllResult(exec, &finalDataTeam);
+    fetchAllResult(exec, &finalDataTeam);
 
-       listStoreTeam = (GtkListStore *) gtk_builder_get_object(builder, "teamStore");
+    listStoreTeam = (GtkListStore *) gtk_builder_get_object(builder, "teamStore");
 
-       for (int i = 0; i < exec->numberOfrow; ++i) {
+    for (int i = 0; i < exec->numberOfrow; ++i) {
 
-           gtk_list_store_append(listStoreTeam, &tempIter);
-           gtk_list_store_set(listStoreTeam, &tempIter, 0, finalDataTeam[i][0], 1, finalDataTeam[i][1], -1);
-       }
+        gtk_list_store_append(listStoreTeam, &tempIter);
+        gtk_list_store_set(listStoreTeam, &tempIter, 0, finalDataTeam[i][0], 1, finalDataTeam[i][1], -1);
+    }
 
 
     gtk_widget_show_all(window);
@@ -607,9 +570,9 @@ void createNewLeague(GtkWidget *widget, gpointer *data) {
     QueryStatement *queryResult;
 
 
-    allEntry = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormNameEntry");
+    allEntry = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueAddFormNameEntry");
 
-    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddFormBox");
+    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueAddFormBox");
 
 
     if (strlen(param = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry))) <= 0) {
@@ -632,7 +595,7 @@ void createNewLeague(GtkWidget *widget, gpointer *data) {
 
 
         statement = "INSERT INTO  \"League\" (name) VALUES ($1) ";
-        query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
+        query = prepareQuery(allParam->centralParam->databaseInfo, statement);
         bindParam(query, param, 0);
         queryResult = executePrepareStatement(query);
 
@@ -650,16 +613,12 @@ void createNewLeague(GtkWidget *widget, gpointer *data) {
             gtk_widget_show_all(currentBox);
 
         } else {
-            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "leagueAddForm"));
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->builder, "leagueAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
 
         }
         closePrepareStatement(query, queryResult, NULL);
-
-        /*
-         * Refresh list store
-         */
     }
 }
 
@@ -674,13 +633,15 @@ void createNewTeam(GtkWidget *widget, gpointer *data) {
     QueryStatement *queryResult;
     char errorMessage[1000] = {0};
 
-    allEntry[0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormNameEntry");
-    allEntry[1] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormCityEntry");
-    allEntry[2] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormStadiumEntry");
-    allEntry[3] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormLeagueComboBox");
+
+    allEntry[0] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamAddFormNameEntry");
+    allEntry[1] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamAddFormCityEntry");
+    allEntry[2] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamAddFormStadiumEntry");
+    allEntry[3] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamAddFormLeagueComboBox");
 
 
-    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddFormBox");
+    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->builder, "teamAddFormBox");
+
 
     if (strlen(param[0] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[0]))) <= 0)
         strcat(errorMessage, "Verify team's name \n");
@@ -716,7 +677,7 @@ void createNewTeam(GtkWidget *widget, gpointer *data) {
 
 
         statement = "INSERT INTO  \"Team\" (name,city,stadium,\"idLeague\") VALUES ($1,$2,$3,$4) ";
-        query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
+        query = prepareQuery(allParam->centralParam->databaseInfo, statement);
         bindParam(query, param[0], 0);
         bindParam(query, param[1], 1);
         bindParam(query, param[2], 2);
@@ -737,17 +698,12 @@ void createNewTeam(GtkWidget *widget, gpointer *data) {
             gtk_widget_show_all(currentBox);
 
         } else {
-            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "teamAddForm"));
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->builder, "teamAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
 
         }
         closePrepareStatement(query, queryResult, NULL);
-
-
-        /*
-         * Refresh list store
-         */
     }
 }
 
@@ -762,13 +718,13 @@ void createNewPlayer(GtkWidget *widget, gpointer *data) {
     QueryStatement *queryResult;
     char errorMessage[1000] = {0};
 
-    allEntry[0] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormFirstnameEntry");
-    allEntry[1] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormLastnameEntry");
-    allEntry[2] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormTeamComboBox");
-    allEntry[3] = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormPositionComboBox");
 
+    allEntry[0] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerAddFormFirstnameEntry");
+    allEntry[1] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerAddFormLastnameEntry");
+    allEntry[2] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerAddFormTeamComboBox");
+    allEntry[3] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerAddFormPositionComboBox");
 
-    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddFormBox");
+    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerAddFormBox");
 
 
     if (strlen(param[0] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[0]))) <= 0)
@@ -805,7 +761,7 @@ void createNewPlayer(GtkWidget *widget, gpointer *data) {
 
 
         statement = "INSERT INTO  \"Player\" (firstname,lastname,\"idTeam\",\"idPosition\") VALUES ($1,$2,$3,$4) ";
-        query = prepareQuery(allParam->mainParam->mainParam->databaseInfo, statement);
+        query = prepareQuery(allParam->centralParam->databaseInfo, statement);
         bindParam(query, param[0], 0);
         bindParam(query, param[1], 1);
         bindParam(query, param[2], 2);
@@ -826,21 +782,14 @@ void createNewPlayer(GtkWidget *widget, gpointer *data) {
             gtk_widget_show_all(currentBox);
 
         } else {
-            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->mainParam->builder, "playerAddForm"));
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->builder, "playerAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
 
         }
         closePrepareStatement(query, queryResult, NULL);
-
-
-        /*
-         * Refresh list store
-         */
     }
 }
-
-
 
 
 void displayLeagueDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColumn *column, gpointer *data) {
@@ -1140,11 +1089,11 @@ void displayPlayerDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCo
 void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColumn *column, gpointer *data) {
     GtkTreeIter iter;
     GtkTreeModel *model;
-    GtkListStore * strikerListStore;
-    TabSearch * mainParam = NULL;
-    AllTabParam * completeTabParam = NULL;
+    GtkListStore *strikerListStore;
+    TabSearch *mainParam = NULL;
+    AllTabParam *completeTabParam = NULL;
     char *test;
-    char *** strikerData = NULL;
+    char ***strikerData = NULL;
     CallbackParam *allParam = (CallbackParam *) data;
     GError *error = NULL;
     GtkWidget *window = NULL;
@@ -1159,8 +1108,8 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
     mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     completeTabParam = (AllTabParam *) malloc(sizeof(AllTabParam));
 
-    if(mainParam != NULL){
-        strcpy(mainParam->statement,"SELECT\n"
+    if (mainParam != NULL) {
+        strcpy(mainParam->statement, "SELECT\n"
                 "  \"Striker\".id,\n"
                 "  \"Player\".firstname || ' ' || \"Player\".lastname AS \"fullName\",\n"
                 "  \"Team\".name,\n"
@@ -1168,7 +1117,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
                 "FROM \"Striker\"\n"
                 "JOIN \"Team\" ON \"Striker\".\"teamScorer\" = \"Team\".id\n"
                 "JOIN \"Player\" ON \"Striker\".\"idPlayer\" = \"Player\".id\n");
-       strcpy(mainParam->listStoreId, "matchListStore");
+        strcpy(mainParam->listStoreId, "matchListStore");
         mainParam->builder = allParam->builder;
         mainParam->numberOfParam = 0;
         mainParam->allSearchParam = NULL;
@@ -1176,8 +1125,9 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
     }
 
 
-    if(completeTabParam != NULL){
-        completeTabParam->mainParam = allParam;
+    if (completeTabParam != NULL) {
+        completeTabParam->builder = allParam->builder;
+        completeTabParam->centralParam = allParam->mainParam;
         completeTabParam->searchParam = mainParam;
     }
 
@@ -1249,30 +1199,26 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
             closePrepareStatement(query, resultQuery, finalData);
 
             query = prepareQuery(allParam->mainParam->databaseInfo,
-                      "SELECT\n"
-                      "  \"Striker\".id,\n"
-                      "  \"Player\".firstname || ' ' || \"Player\".lastname AS \"fullName\",\n"
-                      "  \"Team\".name,\n"
-                      "  \"Striker\".time\n"
-                      "FROM \"Striker\"\n"
-                      "JOIN \"Team\" ON \"Striker\".\"teamScorer\" = \"Team\".id\n"
-                      "JOIN \"Player\" ON \"Striker\".\"idPlayer\" = \"Player\".id\n"
-                      "WHERE \"Striker\".\"idMatch\" = $1");
+                                 "SELECT\n"
+                                         "  \"Striker\".id,\n"
+                                         "  \"Player\".firstname || ' ' || \"Player\".lastname AS \"fullName\",\n"
+                                         "  \"Team\".name,\n"
+                                         "  \"Striker\".time\n"
+                                         "FROM \"Striker\"\n"
+                                         "JOIN \"Team\" ON \"Striker\".\"teamScorer\" = \"Team\".id\n"
+                                         "JOIN \"Player\" ON \"Striker\".\"idPlayer\" = \"Player\".id\n"
+                                         "WHERE \"Striker\".\"idMatch\" = $1");
 
             bindParam(query, test, 0);
             resultQuery = executePrepareStatement(query);
             fetchAllResult(resultQuery, &strikerData);
 
-            strikerListStore = (GtkListStore *) gtk_builder_get_object(allParam->builder,"matchListStore");
+            strikerListStore = (GtkListStore *) gtk_builder_get_object(allParam->builder, "matchListStore");
             for (int i = 0; i < resultQuery->numberOfrow; ++i) {
 
                 gtk_list_store_append(strikerListStore, &iter);
-                gtk_list_store_set(strikerListStore, &iter
-                        , 0, strikerData[i][0]
-                        , 1, strikerData[i][1]
-                        , 2, strikerData[i][2]
-                        , 3, strikerData[i][3]
-                        , -1);
+                gtk_list_store_set(strikerListStore, &iter, 0, strikerData[i][0], 1, strikerData[i][1], 2,
+                                   strikerData[i][2], 3, strikerData[i][3], -1);
             }
 
             tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newScorerButton");
@@ -1280,7 +1226,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
             strcpy(mainParam->id, test);
 
             if (tempWidget != NULL)
-                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(openAddNewStrikerForm),(gpointer)completeTabParam);
+                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(openAddNewStrikerForm), (gpointer) completeTabParam);
 
         } else {
             printf("%s \n", error->message);
@@ -1301,7 +1247,7 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
     GtkWidget *temp = NULL;
     WindowCalendarParam **calendarParam = (WindowCalendarParam **) malloc(2 * sizeof(WindowCalendarParam *));
     AllLeagueMatchParam *allLeagueParam = (AllLeagueMatchParam *) malloc(1 * sizeof(AllLeagueMatchParam));
-    GtkTreeIter iter;
+    GtkTreeIter iter, fatherIter;
     GtkWidget *listStore = NULL;
     GError *error = NULL;
 
@@ -1360,15 +1306,16 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
              */
             query = prepareQuery(allParam->allCalbackParam->mainParam->databaseInfo,
                                  "SELECT\n"
-                                         "    \"Match\".Id AS \"idMatch\",\n"
-                                         "    T1.name AS \"homeTeamName\",\n"
-                                         "    T2.name AS \"outsideTeamName\",\n"
-                                         "    \"Match\".date AS \"matchDate\"\n"
+                                         "    \"Match\".id AS \"idMatch\",\n"
+                                         "    \"T1\".name AS \"homeTeamName\",\n"
+                                         "    \"T2\".name AS \"outsideTeamName\",\n"
+                                         "    to_char(\"Match\".date, 'YYYY-mm-dd') AS \"matchDate\"\n"
                                          "FROM \"Match\"\n"
-                                         "JOIN \"Team\" AS T1 ON \"Match\".\"homeTeam\" = T1.id\n"
-                                         "JOIN \"Team\" AS T2 ON \"Match\".\"outsideTeam\" = T2.id\n"
+                                         "JOIN \"Team\" AS \"T1\" ON \"Match\".\"homeTeam\" = \"T1\".id\n"
+                                         "JOIN \"Team\" AS \"T2\" ON \"Match\".\"outsideTeam\" = \"T2\".id\n"
                                          "WHERE \"Match\".\"idLeague\" = $1"
-                                         "  AND date >= now()");
+                                         "  AND date >= now()"
+                                         "ORDER BY \"Match\".date ASC, \"Match\".id ASC");
 
             bindParam(query, allParam->id, 0);
 
@@ -1380,15 +1327,24 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
                 fetchAllResult(queryResult, &finalData);
 
                 listStore = (GtkWidget *) gtk_builder_get_object(builder, "matchListStore");
+                if (queryResult->numberOfrow > 0) {
+                    gtk_tree_store_append(GTK_TREE_STORE(listStore), &fatherIter, NULL);
+                    gtk_tree_store_set(GTK_TREE_STORE(listStore), &fatherIter, 3, finalData[0][3], -1);
+                }
 
                 for (int i = 0; i < queryResult->numberOfrow; ++i) {
-                    gtk_list_store_append(GTK_LIST_STORE(listStore), &iter);
-                    gtk_list_store_set(GTK_LIST_STORE(listStore), &iter,
+                    gtk_tree_store_append(GTK_TREE_STORE(listStore), &iter, &fatherIter);
+                    gtk_tree_store_set(GTK_TREE_STORE(listStore), &iter,
                                        0, finalData[i][0],
                                        1, finalData[i][1],
                                        2, finalData[i][2],
                                        3, finalData[i][3],
                                        -1);
+
+                    if (i + 1 < queryResult->numberOfrow && strcmp(finalData[i][3], finalData[i + 1][3]) != 0) {
+                        gtk_tree_store_append(GTK_TREE_STORE(listStore), &fatherIter, NULL);
+                        gtk_tree_store_set(GTK_TREE_STORE(listStore), &fatherIter, 3, finalData[i + 1][3], -1);
+                    }
                 }
             }
 
@@ -1401,10 +1357,9 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
 
             calendarParam[0] = (WindowCalendarParam *) malloc(1 * sizeof(WindowCalendarParam));
 
+
             if (calendarParam[0] != NULL) {
-                strcpy(calendarParam[0]->fileName, "leagueDetail/main.glade");
-                strcpy(calendarParam[0]->calendarWindowId, "calendarWindow");
-                strcpy(calendarParam[0]->calendarId, "mainCalendar");
+
                 calendarParam[0]->destinationWidget = temp;
                 calendarParam[0]->calendarWindow = NULL;
                 calendarParam[0]->month = -1;
@@ -1422,9 +1377,7 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
             calendarParam[1] = (WindowCalendarParam *) malloc(1 * sizeof(WindowCalendarParam));
 
             if (calendarParam[1] != NULL) {
-                strcpy(calendarParam[1]->fileName, "leagueDetail/main.glade");
-                strcpy(calendarParam[1]->calendarWindowId, "calendarWindow");
-                strcpy(calendarParam[1]->calendarId, "mainCalendar");
+
                 calendarParam[1]->destinationWidget = temp;
                 calendarParam[1]->calendarWindow = NULL;
                 calendarParam[1]->month = -1;
@@ -1470,16 +1423,23 @@ void openCalendar(GtkEntry *widget, GtkEntryIconPosition iconPos, GdkEvent *even
     GtkWidget *calendar = NULL;
     WindowCalendarParam *calendarParam = (WindowCalendarParam *) data;
 
-    error = loadGladeFile(&builder, calendarParam->fileName);
+    error = loadGladeFile(&builder, "toolWidget/calendar.glade");
 
     if (error == NULL) {
-        window = (GtkWidget *) gtk_builder_get_object(builder, calendarParam->calendarWindowId);
+        window = (GtkWidget *) gtk_builder_get_object(builder, "calendarWindow");
 
         if (window != NULL) {
 
             calendarParam->calendarWindow = window;
 
-            calendar = (GtkWidget *) gtk_builder_get_object(builder, calendarParam->calendarId);
+            calendar = (GtkWidget *) gtk_builder_get_object(builder, "mainCalendar");
+
+            if (calendarParam->day != -1)
+                gtk_calendar_select_day(GTK_CALENDAR(calendar), (guint) calendarParam->day);
+
+            if (calendarParam->month != -1 && calendarParam->year != -1)
+                gtk_calendar_select_month(GTK_CALENDAR(calendar), (guint) calendarParam->month,
+                                          (guint) calendarParam->year);
 
             if (calendar != NULL)
                 g_signal_connect(G_OBJECT(calendar), "day-selected-double-click", G_CALLBACK(daySelect),
@@ -1518,41 +1478,52 @@ void daySelect(GtkCalendar *calendar, gpointer *data) {
 
 
 void newLeagueMatch(GtkWidget *widget, gpointer *data) {
+
     AllLeagueMatchParam *allMatchParam = (AllLeagueMatchParam *) data;
     WindowCalendarParam **allParam = allMatchParam->allCalendarParam;
-    GtkWidget *entry[2] = {NULL};
     GDate *date[2] = {NULL};
     GDate *currentDate = NULL;
     GTimeVal *currentTime = NULL;
-    GtkBuilder *builder = NULL;
     GtkWidget *errorWidget = NULL;
     GList *allChild = NULL, *tempList = NULL;
-    PrepareStatement *query = NULL;
+    PrepareStatement *exec = NULL;
     QueryStatement *queryResult = NULL;
     char ***finalData = NULL;
-    char **temp = NULL;
-    char tempChar[20] = {0};
-    char *pointerChar = NULL;
+    char **configuration = NULL;
+    char errorMessage[100] = {0};
     GString *statement = g_string_new("");
-    int dateCompare, error = 0, nbSort = 0, nmb = 20, tmp = 0, k = 1, m = 0;
+    int dateCompare, error = 0, nmb = 20, k, nRound;
+    int ***roundRobinArray = NULL;
     const GDateMonth monthNames[] = {G_DATE_JANUARY, G_DATE_FEBRUARY, G_DATE_MARCH, G_DATE_APRIL, G_DATE_MAY,
                                      G_DATE_JUNE, G_DATE_JULY, G_DATE_AUGUST, G_DATE_SEPTEMBER, G_DATE_OCTOBER,
                                      G_DATE_NOVEMBER, G_DATE_DECEMBER};
 
+
+    /*
+     * Create a variable with current date and time
+     */
     currentTime = (GTimeVal *) malloc(sizeof(GTimeVal));
     currentDate = g_date_new();
     g_get_current_time(currentTime);
     g_date_set_time_val(currentDate, currentTime);
 
+
+    /*
+     * Get the error message box
+     */
     if (allMatchParam->builder != NULL)
+
         errorWidget = (GtkWidget *) gtk_builder_get_object(allMatchParam->builder, "errorMessageBox");
 
-    entry[0] = allParam[0]->destinationWidget;
-    entry[1] = allParam[1]->destinationWidget;
 
+    /*
+     * If day, month and year are different from 1
+     * Init twice g date structure, with the two date choose by the user
+     */
     if (allParam[0]->day > -1 && allParam[0]->month > -1 && allParam[0]->year > -1)
         date[0] = g_date_new_dmy((GDateDay) allParam[0]->day, (GDateMonth) monthNames[allParam[0]->month],
                                  (GDateYear) allParam[0]->year);
+
 
     if (allParam[1]->day > -1 && allParam[1]->month > -1 && allParam[1]->year > -1)
         date[1] = g_date_new_dmy((GDateDay) allParam[1]->day, (GDateMonth) monthNames[allParam[1]->month],
@@ -1560,9 +1531,9 @@ void newLeagueMatch(GtkWidget *widget, gpointer *data) {
 
 
     /*
-     * Compare the two date
-     * If return  =0 error date are equal
-     * IF return > 0 error date 1 is superior to date 2
+     * Get all the children of the gtk error message box
+     * Travel list, and remove all the children of the error message box
+     * Free the list
      */
     if (errorWidget != NULL)
         allChild = gtk_container_get_children(GTK_CONTAINER(errorWidget));
@@ -1572,8 +1543,17 @@ void newLeagueMatch(GtkWidget *widget, gpointer *data) {
 
     g_list_free(allChild);
 
+
+    /*
+     * Check if both date are valid;
+     */
     if (date[0] != NULL && date[1] != NULL && g_date_valid(date[0]) && g_date_valid(date[1])) {
+        /*
+         * Check if date are different
+         * Check if the first date are before the second date
+         */
         if ((dateCompare = g_date_compare(date[0], date[1])) == 0) {
+
             gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Date can't be equal"), FALSE, FALSE, 0);
             error = 1;
         } else if (dateCompare > 0) {
@@ -1583,48 +1563,80 @@ void newLeagueMatch(GtkWidget *widget, gpointer *data) {
             error = 1;
         }
 
+        /*
+         * First date need to be after current date
+         */
         if (error == 0 && g_date_compare(currentDate, date[0]) >= 0) {
-            gtk_box_pack_start(GTK_BOX(errorWidget),
-                               gtk_label_new("Date of the first part, need to be after today"), FALSE, FALSE, 0);
+            gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Date of the first part, need to be after today"),
+                               FALSE, FALSE, 0);
             error = 1;
         }
 
+        /*
+         * Second date need to be after the end of the first part of the league
+         */
         if (error == 0 && g_date_days_between(date[0], date[1]) < 19 * 7) {
             if (errorWidget != NULL)
-                gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new(
-                        "Start date of the second part, is before the end of the first part"), FALSE, FALSE, 0);
+                gtk_box_pack_start(GTK_BOX(errorWidget),
+                                   gtk_label_new("Start date of the second part, is before the end of the first part"),
+                                   FALSE, FALSE, 0);
             error = 1;
         }
 
-        if (error == 0) {
-            query = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
-                                 "SELECT\n"
-                                         "      id,\n"
-                                         "      stadium\n"
-                                         "FROM \"Team\"\n"
-                                         "WHERE \"idLeague\" = $1");
+        /*
+         * Check if the league is not already configure
+         */
+        exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                            "SELECT\n"
+                                    "  configure\n"
+                                    "FROM \"League\"\n"
+                                    "WHERE id = $1");
 
-            bindParam(query, allMatchParam->mainParam->id, 0);
 
-            queryResult = executePrepareStatement(query);
+        bindParam(exec, allMatchParam->mainParam->id, 0);
+
+        queryResult = executePrepareStatement(exec);
+
+        fetchResult(queryResult, &configuration);
+
+        if (strcmp(configuration[0], "1") == 0) {
+            gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("This league has already be configured"), FALSE,
+                               FALSE, 0);
+            error = 1;
+        }
+
+        closePrepareStatement(exec, queryResult, &configuration);
+
+        if (error != 1) {
+
+            /*
+             * Get all the team of the league
+             */
+            exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                                "SELECT\n"
+                                        "      id,\n"
+                                        "      stadium\n"
+                                        "FROM \"Team\"\n"
+                                        "WHERE \"idLeague\" = $1");
+
+            bindParam(exec, allMatchParam->mainParam->id, 0);
+
+            queryResult = executePrepareStatement(exec);
 
             if (queryResult->error != 1) {
                 fetchAllResult(queryResult, &finalData);
 
+
+                /*
+                 * Twenty team are needed to generate the match
+                 */
                 if (queryResult->numberOfrow != 20) {
                     gtk_box_pack_start(GTK_BOX(errorWidget),
-                                       gtk_label_new("Twenty team are needed to generate the match"), FALSE, FALSE,
-                                       0);
+                                       gtk_label_new("Twenty team are needed to generate the match"), FALSE, FALSE, 0);
                     error = 1;
                 }
 
-                if (error == 0) {
-                    /*for (int i = 0; i < queryResult->numberOfRow; ++i) {
-                        nbSort = rand() % queryResult->numberOfRow - 1;
-                        temp = finalData[i];
-                        finalData[i] = finalData[nbSort];1
-                        finalData[nbSort] = temp;
-                    }*/
+                if (error != 1) {
 
                     statement = g_string_append(statement,
                                                 "INSERT INTO \"Match\"(\"homeTeam\",\n"
@@ -1635,70 +1647,77 @@ void newLeagueMatch(GtkWidget *widget, gpointer *data) {
                                                         "                    VALUES ");
 
 
-                    query = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
-                                         statement->str);
+                    exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                                        statement->str);
 
-                    int days = (nmb % 2 == 0) ? nmb - 1 : nmb;
-                    for (int i = 0; i < days; i++) {
-                        g_date_strftime(tempChar, 20, "%Y-%m-%d", date[0]);
-                        pointerChar = g_strdup(tempChar);
+                    /*
+                     * Get all the match scheduled
+                     */
+                    nRound = roundRobinAlgorithm(nmb, &roundRobinArray);
 
-                        for (int j = 0; j < nmb / 2; j++) {
-                            int t1 = (j + i) % nmb;
-                            int t2 = (nmb - j - 1 + i) % nmb;
+                    if (roundRobinArray == NULL || nRound == -1)
+                        error = 1;
 
-                            if (t1 == 0 || t2 == 0)
-                                printf("%d & %d / Team n° %d vs team n° %d \n", i, j, t1, t2);
-                            if (tmp == 1)
-                                statement = g_string_append(statement, ", ");
-                            tmp = 1;
+                    if (error != 1) {
+                        /*
+                         * Insert all the match prepare statement query
+                         */
+                        k = insertMatch(roundRobinArray, finalData, nmb, nRound, allMatchParam->mainParam->id, date[0],
+                                        date[1], exec);
 
-                            statement = g_string_append(statement, "(");
-                            for (int l = 0; l < 5; ++l) {
-                                if (l != 4) {
-                                    g_string_append_printf(statement, "$%d,", k++);
-                                } else {
-                                    g_string_append_printf(statement, "$%d", k++);
-                                }
-                            }
-                            statement = g_string_append(statement, ")");
+                        freeRoundRobinArray(nmb, &roundRobinArray);
+                        //exec->query = statement->str;
+                        queryResult = executePrepareStatement(exec);
 
-
-                            bindParam(query, finalData[t1][0], m++);
-                            bindParam(query, finalData[t2][0], m++);
-                            bindParam(query, pointerChar, m++);
-                            bindParam(query, allMatchParam->mainParam->id, m++);
-                            bindParam(query, finalData[t1][1], m++);
+                        if (queryResult->error == 1) {
+                            gtk_box_pack_start(GTK_BOX(errorWidget),
+                                               gtk_label_new("An error has occured when inserting the match"), FALSE,
+                                               FALSE, 0);
+                            error = 1;
                         }
-                        printf("\n \n");
-                        g_date_add_days(date[0], 7);
-                        if (i == 10)
-                            break;
+
+                        closePrepareStatement(exec, queryResult, NULL);
+
+                        if (error != 1) {
+                            sprintf(errorMessage, "%d match have been created\n", k / 5);
+                            gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new(errorMessage), FALSE, FALSE, 0);
+
+                            exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                                                "UPDATE \"League\"\n"
+                                                        "SET configure = 1\n"
+                                                        "WHERE id = $1");
+                            bindParam(exec, allMatchParam->mainParam->id, 0);
+
+
+                            queryResult = executePrepareStatement(exec);
+
+                            while (queryResult->error != 0)
+                                queryResult = executePrepareStatement(exec);
+
+                            closePrepareStatement(exec, queryResult, NULL);
+                        }
+                    } else {
+                        gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Internal error"), FALSE, FALSE, 0);
                     }
-
-                    query->query = statement->str;
-                    queryResult = executePrepareStatement(query);
-
-                    if (queryResult->error == 1)
-                        printf("error");
-
-                    closePrepareStatement(query, queryResult, NULL);
                 }
 
             } else {
                 gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Internal error"), FALSE, FALSE, 0);
-                error = 1;
+                return;
             }
-
         }
 
-
     } else {
-        gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Invalid date, please check your entry"), FALSE,
-                           FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Invalid date, please check your entry"), FALSE, FALSE,
+                           0);
+        return;
     }
 
+    /*
+     * Free all the param use
+     */
     if (errorWidget != NULL)
+
         gtk_widget_show_all(errorWidget);
 
     if (date[0] != NULL)

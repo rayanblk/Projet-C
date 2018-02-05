@@ -223,7 +223,6 @@ void fetchAllResult(QueryStatement * query, char **** dataArray){
         }
 
         query->fetchType = 1;
-
     }
 }
 
