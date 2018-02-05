@@ -419,7 +419,9 @@ void initPlayerTreeView(GtkWidget *parentBox, CallbackParam *data) {
 
 }
 
+
 void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
+
     GtkListStore *listStore = NULL;
     GtkWidget *button = NULL;
     GtkTreeIter tempIter;
@@ -428,6 +430,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
     TabSearchParam **tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
     TabSearch *mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     GtkTreeView *tempView = NULL;
+
 
 
     listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "matchListStore");
@@ -475,6 +478,14 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
             strcpy(tabParam[1]->gtkEntryId, "nameNameEntry");
         }
 
+        tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
+        if (tabParam[2] != NULL) {
+            strcpy(tabParam[2]->condition, "\"Match\".\"dateUpdate\" ILIKE $");
+            tabParam[2]->typeCondition = 1;
+            strcpy(tabParam[2]->gtkEntryId, "dateMatchEntry");
+        }
+
+
         mainParam->allSearchParam = tabParam;
         mainParam->builder = data->builder;
         mainParam->mainParam = data->mainParam;
@@ -489,7 +500,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
                        "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
                        "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id");
 
-        mainParam->numberOfParam = 2;
+        mainParam->numberOfParam = 3;
 
         strcpy(mainParam->listStoreId, "matchListStore");
 
@@ -688,4 +699,3 @@ int insertMatch(int ***allMatch, char ***data, int nmb, int nRound, char *league
     return k;
 
 }
-

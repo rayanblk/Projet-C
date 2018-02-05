@@ -94,6 +94,7 @@ int main(int argc,char **argv) {
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
 
 
+
         /*
          * Show all child widget of main Window
          */
@@ -125,3 +126,4 @@ int main(int argc,char **argv) {
         return 0;
     }
 }
+
