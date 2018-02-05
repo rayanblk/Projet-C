@@ -404,9 +404,7 @@ void initPlayerTreeView(GtkWidget *parentBox, CallbackParam *data) {
         completeTabParam->searchParam = mainParam;
 
         if (button != NULL) {
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm),
-                             (gpointer) completeTabParam);
-
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm), (gpointer) completeTabParam);
 
         }
 
