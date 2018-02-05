@@ -485,7 +485,7 @@ void openAddNewStrikerForm(GtkWidget *widget, gpointer *data) {
 
     loadGladeFile(&builder, "formWidget/newStriker.glade");
 
-    newParam->builder = builder;
+    mainParam->builder = builder;
 
     window = (GtkWidget *) gtk_builder_get_object(builder, "strikerAddForm");
 
