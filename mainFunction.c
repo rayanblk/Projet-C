@@ -62,7 +62,9 @@ CallbackParam * initAddNotebookTabButton(GtkBuilder * builder, char * parentName
         strcpy((char *) tempCallBackParam->objectLabel, objectLabel);
         strcpy((char *) tempCallBackParam->fileName, fileName);
 
+
         *list = g_list_prepend(*list, tempCallBackParam);
+
 
         return tempCallBackParam;
     }
@@ -304,7 +306,6 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
     }
 }
 
-
 void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
     GtkListStore *listStore = NULL;
     GtkWidget * button = NULL;
@@ -428,7 +429,6 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
 
 }
 
-
 void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
     GtkListStore *listStore = NULL;
     GtkWidget * button = NULL;
@@ -493,23 +493,6 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
             strcpy(tabParam[1]->gtkEntryId, "nameNameEntry");
         }
 
-        /*
-        tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
-        if (tabParam[2] != NULL) {
-            strcpy(tabParam[2]->condition, "\"Team\".name ILIKE $");
-            tabParam[2]->typeCondition = 1;
-            strcpy(tabParam[2]->gtkEntryId, "teamPlayerEntry");
-        }
-
-        tabParam[3] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
-        if (tabParam[3] != NULL) {
-            strcpy(tabParam[3]->condition, "\"Position\".acronym ILIKE $");
-            tabParam[3]->typeCondition = 1;
-            strcpy(tabParam[3]->gtkEntryId, "positionPlayerEntry");
-        }
-         */
-
-
         mainParam->allSearchParam = tabParam;
         mainParam->builder = data->builder;
         mainParam->mainParam = data->mainParam;
@@ -550,3 +533,164 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
         }
 
     }
+
+int roundRobinAlgorithm(int numberOfTeam, int **** returnArray){
+    int *** roundRobinArray = *returnArray;
+    int nRound = numberOfTeam - 1;
+    int i, j, k, l, tmp;
+
+    roundRobinArray = (int ***) calloc(2, sizeof(int **));
+    /*
+     * First dimension return
+     */
+    if(roundRobinArray != NULL){
+        roundRobinArray[0] = (int **) calloc((size_t) (nRound * 2), sizeof(int *));
+        roundRobinArray[1] = (int **) calloc((size_t) (nRound * 2), sizeof(int *));
+    }else{
+        return -1;
+    }
+
+    /*
+     * Check if the allocation of the second dimension is correct
+     */
+    if(roundRobinArray[0] == NULL || roundRobinArray[1] == 0)
+        return -1;
+
+    /*
+     * Allocate the third dimension
+     */
+    for (i = 0; i < nRound * 2; ++i) {
+
+        roundRobinArray[0][i] = (int *) calloc((size_t) (numberOfTeam / 2), sizeof(int));
+
+        roundRobinArray[1][i] = (int *) calloc((size_t) (numberOfTeam / 2), sizeof(int));
+    }
+
+    roundRobinArray[0][0][0] = -1;
+    for (i = 1; i < numberOfTeam/2; ++i) {
+        roundRobinArray[0][0][i] = i;
+        roundRobinArray[1][0][i] = nRound - i;
+        if(i % 2 == 1){
+            tmp = roundRobinArray[0][0][i];
+            roundRobinArray[0][0][i] = roundRobinArray[1][0][i];
+            roundRobinArray[1][0][i] = tmp;
+        }
+    }
+
+    for (i = 1; i < nRound; ++i) {
+        for (j = 0; j < numberOfTeam /2; ++j) {
+            for(l = 0; l < 2; ++l){
+                if(roundRobinArray[l][i - 1][j] >= 0){
+                    roundRobinArray[l][i][j] =  (roundRobinArray[l][i - 1][j] + 1)  % nRound;
+                }else{
+                    roundRobinArray[l][i][j] = -1;
+                }
+            }
+        }
+    }
+
+    for (i = 1; i <  nRound - 1; i+= 2) {
+        roundRobinArray[0][i][0] = roundRobinArray[1][i][0];
+        roundRobinArray[1][i][0] = -1;
+    }
+
+    for (i = 0; i < nRound; ++i) {
+        for (j = 0; j < numberOfTeam / 2; ++j) {
+            roundRobinArray[0][i][j] = roundRobinArray[0][i][j] + 1;
+            roundRobinArray[1][i][j] = roundRobinArray[1][i][j] + 1;
+        }
+    }
+
+    /*
+     * Second part of round robin array
+     */
+    tmp = roundRobinArray[0][nRound - 2][0];
+    roundRobinArray[0][nRound - 2][0] = roundRobinArray[1][nRound - 2][0];
+    roundRobinArray[1][nRound - 2][0] = tmp;
+    tmp = roundRobinArray[0][nRound - 1][0];
+    roundRobinArray[0][nRound - 1][0] = roundRobinArray[1][nRound - 1][0];
+    roundRobinArray[1][nRound - 1][0] = tmp;
+
+    for (i = 0; i < nRound; ++i) {
+        for (j = 0; j < numberOfTeam / 2; ++j) {
+            roundRobinArray[0][i + nRound][j] = roundRobinArray[1][i][j];
+            roundRobinArray[1][i + nRound][j] = roundRobinArray[0][i][j];
+        }
+    }
+
+    /*for (i = 0; i < nRound *2 ; ++i) {
+        printf("%d:\n", i);
+        for (j = 0; j < numberOfTeam / 2; ++j) {
+            printf("  %d:\n", j);
+            printf("    %d \n", roundRobinArray[0][i][j]);
+            printf("    %d \n", roundRobinArray[1][i][j]);
+        }
+    }*/
+
+    *returnArray = roundRobinArray;
+
+    return nRound;
+
+}
+
+int insertMatch(int *** allMatch, char *** data, int nmb, int nRound, char * leagueId, GDate * startDateFirstPart, GDate * startDateSecondPart, PrepareStatement * exec) {
+    int i, j, l, k = 1, n, tmp = 0, m = 0, loopInitializer, loopEnd;
+    char tempChar[20];
+    char * pointerChar;
+    GString *statement;
+    GDate * tempDate;
+
+    /*
+     * Put the query to a gstring, to make easier manipulation
+     */
+    statement = g_string_new(exec->query);
+
+    for (n = 0; n < 2; ++n) {
+
+        if(n == 0){
+            tempDate = startDateFirstPart;
+            loopInitializer = 0;
+            loopEnd = nRound;
+        }else{
+            tempDate = startDateSecondPart;
+            loopInitializer = nRound;
+            loopEnd = nRound * 2;
+        }
+
+        for (i=loopInitializer; i< loopEnd; i++) {
+            g_date_strftime(tempChar, 20, "%Y-%m-%d", tempDate);
+            pointerChar = g_strdup(tempChar);
+
+            for (j=0; j < nmb/2; j++) {
+
+                if(tmp == 1)
+                    statement = g_string_append(statement, ", ");
+                tmp = 1;
+
+                statement = g_string_append(statement, "(");
+                for (l = 0; l < 5; ++l) {
+                    if(l != 4) {
+                        g_string_append_printf(statement, "$%d,", k++);
+                    }else{
+                        g_string_append_printf(statement, "$%d", k++);
+                    }
+                }
+                statement = g_string_append(statement, ")");
+
+                bindParam(exec, data[allMatch[0][i][j]][0], m++);
+                bindParam(exec, data[allMatch[1][i][j]][0], m++);
+                bindParam(exec, pointerChar, m++);
+                bindParam(exec, leagueId, m++);
+                bindParam(exec, data[allMatch[0][i][j]][1], m++);
+            }
+
+            g_date_add_days(tempDate, 7);
+        }
+    }
+
+    exec->query = statement->str;
+
+
+    return k;
+
+}

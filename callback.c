@@ -1079,7 +1079,7 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
     GtkWidget * temp = NULL;
     WindowCalendarParam ** calendarParam = (WindowCalendarParam **) malloc(2 * sizeof(WindowCalendarParam *));
     AllLeagueMatchParam * allLeagueParam = (AllLeagueMatchParam *) malloc(1 * sizeof(AllLeagueMatchParam));
-    GtkTreeIter iter;
+    GtkTreeIter iter, fatherIter;
     GtkWidget * listStore = NULL;
     GError * error = NULL;
 
@@ -1137,15 +1137,16 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
              */
             query = prepareQuery(allParam->allCalbackParam->mainParam->databaseInfo,
                                  "SELECT\n"
-                                 "    \"Match\".Id AS \"idMatch\",\n"
-                                 "    T1.name AS \"homeTeamName\",\n"
-                                 "    T2.name AS \"outsideTeamName\",\n"
-                                 "    \"Match\".date AS \"matchDate\"\n"
+                                 "    \"Match\".id AS \"idMatch\",\n"
+                                 "    \"T1\".name AS \"homeTeamName\",\n"
+                                 "    \"T2\".name AS \"outsideTeamName\",\n"
+                                 "    to_char(\"Match\".date, 'YYYY-mm-dd') AS \"matchDate\"\n"
                                  "FROM \"Match\"\n"
-                                 "JOIN \"Team\" AS T1 ON \"Match\".\"homeTeam\" = T1.id\n"
-                                 "JOIN \"Team\" AS T2 ON \"Match\".\"outsideTeam\" = T2.id\n"
+                                 "JOIN \"Team\" AS \"T1\" ON \"Match\".\"homeTeam\" = \"T1\".id\n"
+                                 "JOIN \"Team\" AS \"T2\" ON \"Match\".\"outsideTeam\" = \"T2\".id\n"
                                  "WHERE \"Match\".\"idLeague\" = $1"
-                                 "  AND date >= now()");
+                                 "  AND date >= now()"
+                                 "ORDER BY \"Match\".date ASC, \"Match\".id ASC");
 
             bindParam(query, allParam->id, 0);
 
@@ -1157,15 +1158,24 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
                 fetchAllResult(queryResult, &finalData);
 
                 listStore = (GtkWidget *) gtk_builder_get_object(builder, "matchListStore");
+                if(queryResult->numberOfrow > 0){
+                    gtk_tree_store_append(GTK_TREE_STORE(listStore), &fatherIter, NULL);
+                    gtk_tree_store_set(GTK_TREE_STORE(listStore), &fatherIter, 3, finalData[0][3], -1);
+                }
 
                 for (int i = 0; i < queryResult->numberOfrow; ++i) {
-                    gtk_list_store_append(GTK_LIST_STORE(listStore), &iter);
-                    gtk_list_store_set(GTK_LIST_STORE(listStore), &iter,
+                    gtk_tree_store_append(GTK_TREE_STORE(listStore), &iter, &fatherIter);
+                    gtk_tree_store_set(GTK_TREE_STORE(listStore), &iter,
                                        0, finalData[i][0],
                                        1, finalData[i][1],
                                        2, finalData[i][2],
                                        3, finalData[i][3],
                                        -1);
+
+                    if(i + 1 < queryResult->numberOfrow && strcmp(finalData[i][3], finalData[i + 1][3]) != 0){
+                        gtk_tree_store_append(GTK_TREE_STORE(listStore), &fatherIter, NULL);
+                        gtk_tree_store_set(GTK_TREE_STORE(listStore), &fatherIter, 3, finalData[i+1][3], -1);
+                    }
                 }
             }
 
@@ -1179,9 +1189,6 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
             calendarParam[0] = (WindowCalendarParam *) malloc(1 * sizeof(WindowCalendarParam));
 
             if(calendarParam[0] != NULL){
-                strcpy(calendarParam[0]->fileName, "leagueDetail/main.glade");
-                strcpy(calendarParam[0]->calendarWindowId, "calendarWindow");
-                strcpy(calendarParam[0]->calendarId, "mainCalendar");
                 calendarParam[0]->destinationWidget = temp;
                 calendarParam[0]->calendarWindow = NULL;
                 calendarParam[0]->month = -1;
@@ -1198,9 +1205,6 @@ void openMoreDetailLeague(GtkWidget * widget, gpointer * data){
             calendarParam[1] = (WindowCalendarParam *) malloc(1 * sizeof(WindowCalendarParam));
 
             if(calendarParam[1] != NULL){
-                strcpy(calendarParam[1]->fileName, "leagueDetail/main.glade");
-                strcpy(calendarParam[1]->calendarWindowId, "calendarWindow");
-                strcpy(calendarParam[1]->calendarId, "mainCalendar");
                 calendarParam[1]->destinationWidget = temp;
                 calendarParam[1]->calendarWindow = NULL;
                 calendarParam[1]->month = -1;
@@ -1246,16 +1250,22 @@ void openCalendar (GtkEntry * widget, GtkEntryIconPosition iconPos, GdkEvent *ev
     GtkWidget * calendar = NULL;
     WindowCalendarParam * calendarParam = (WindowCalendarParam *) data;
 
-    error = loadGladeFile(&builder, calendarParam->fileName);
+    error = loadGladeFile(&builder, "toolWidget/calendar.glade");
 
     if(error == NULL){
-        window = (GtkWidget *) gtk_builder_get_object(builder, calendarParam->calendarWindowId);
+        window = (GtkWidget *) gtk_builder_get_object(builder, "calendarWindow");
 
         if(window != NULL){
 
             calendarParam->calendarWindow = window;
 
-            calendar = (GtkWidget *) gtk_builder_get_object(builder, calendarParam->calendarId);
+            calendar = (GtkWidget *) gtk_builder_get_object(builder, "mainCalendar");
+
+            if(calendarParam->day != -1)
+                gtk_calendar_select_day(GTK_CALENDAR(calendar), (guint) calendarParam->day);
+
+            if(calendarParam->month != -1 && calendarParam->year != -1)
+                gtk_calendar_select_month(GTK_CALENDAR(calendar), (guint) calendarParam->month, (guint) calendarParam->year);
 
             if(calendar != NULL)
                 g_signal_connect(G_OBJECT(calendar), "day-selected-double-click", G_CALLBACK(daySelect), calendarParam);
@@ -1293,23 +1303,24 @@ void daySelect(GtkCalendar * calendar, gpointer * data){
 
 
 void newLeagueMatch(GtkWidget * widget, gpointer * data) {
+
     AllLeagueMatchParam *allMatchParam = (AllLeagueMatchParam *) data;
     WindowCalendarParam **allParam = allMatchParam->allCalendarParam;
     GtkWidget *entry[2] = {NULL};
     GDate *date[2] = {NULL};
     GDate *currentDate = NULL;
     GTimeVal *currentTime = NULL;
-    GtkBuilder *builder = NULL;
     GtkWidget *errorWidget = NULL;
     GList *allChild = NULL, *tempList = NULL;
-    PrepareStatement * query = NULL;
+    PrepareStatement * exec = NULL;
     QueryStatement * queryResult = NULL;
     char ***finalData = NULL;
-    char ** temp = NULL;
-    char tempChar[20] = {0};
+    char ** configuration = NULL;
+    char tempChar[20] = {0}, errorMessage[100] = {0};
     char * pointerChar = NULL;
     GString * statement = g_string_new("");
-    int dateCompare, error = 0, nbSort = 0, nmb = 20, tmp = 0, k = 1, m = 0;
+    int dateCompare, error = 0, nmb = 20, tmp = 0, k = 1, m = 0, i = 0, j = 0, l = 0, nRound;
+    int *** roundRobinArray= NULL;
     const GDateMonth monthNames[] = {G_DATE_JANUARY, G_DATE_FEBRUARY, G_DATE_MARCH, G_DATE_APRIL, G_DATE_MAY, G_DATE_JUNE, G_DATE_JULY, G_DATE_AUGUST, G_DATE_SEPTEMBER, G_DATE_OCTOBER, G_DATE_NOVEMBER, G_DATE_DECEMBER};
 
     currentTime = (GTimeVal *) malloc(sizeof(GTimeVal));
@@ -1330,11 +1341,7 @@ void newLeagueMatch(GtkWidget * widget, gpointer * data) {
         date[1] = g_date_new_dmy((GDateDay) allParam[1]->day, (GDateMonth) monthNames[allParam[1]->month], (GDateYear) allParam[1]->year);
 
 
-    /*
-     * Compare the two date
-     * If return  =0 error date are equal
-     * IF return > 0 error date 1 is superior to date 2
-     */
+
     if(errorWidget != NULL)
         allChild = gtk_container_get_children(GTK_CONTAINER(errorWidget));
 
@@ -1349,7 +1356,7 @@ void newLeagueMatch(GtkWidget * widget, gpointer * data) {
             error = 1;
         }else if(dateCompare > 0){
             gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Date of the first season part can't be superior to the second part start date"), FALSE, FALSE, 0);
-            error = 1;
+            return;
         }
 
         if(error == 0 && g_date_compare(currentDate, date[0]) >= 0){
@@ -1363,17 +1370,38 @@ void newLeagueMatch(GtkWidget * widget, gpointer * data) {
             error = 1;
         }
 
-        if(error == 0){
-            query = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
-                    "SELECT\n"
-                    "      id,\n"
-                    "      stadium\n"
-                    "FROM \"Team\"\n"
-                    "WHERE \"idLeague\" = $1");
 
-            bindParam(query, allMatchParam->mainParam->id, 0);
+        exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                             "SELECT\n"
+                             "  configure\n"
+                             "FROM \"League\"\n"
+                              "WHERE id = $1");
 
-            queryResult = executePrepareStatement(query);
+        bindParam(exec, allMatchParam->mainParam->id, 0);
+
+        queryResult = executePrepareStatement(exec);
+
+        fetchResult(queryResult, &configuration);
+        printf("%s \n",configuration[0]);
+        if(strcmp(configuration[0], "1") == 0){
+            gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("This league has already be configured"), FALSE, FALSE, 0);
+            error = 1;
+        }
+
+        closePrepareStatement(exec, queryResult, &configuration);
+
+        if(error != 1){
+
+            exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                                 "SELECT\n"
+                                         "      id,\n"
+                                         "      stadium\n"
+                                         "FROM \"Team\"\n"
+                                         "WHERE \"idLeague\" = $1");
+
+            bindParam(exec, allMatchParam->mainParam->id, 0);
+
+            queryResult = executePrepareStatement(exec);
 
             if(queryResult->error != 1){
                 fetchAllResult(queryResult, &finalData);
@@ -1383,82 +1411,70 @@ void newLeagueMatch(GtkWidget * widget, gpointer * data) {
                     error = 1;
                 }
 
-                if(error == 0){
-                    /*for (int i = 0; i < queryResult->numberOfRow; ++i) {
-                        nbSort = rand() % queryResult->numberOfRow - 1;
-                        temp = finalData[i];
-                        finalData[i] = finalData[nbSort];1
-                        finalData[nbSort] = temp;
-                    }*/
+                if(error != 1){
 
                     statement = g_string_append(statement,
-                            "INSERT INTO \"Match\"(\"homeTeam\",\n"
-                            "                      \"outsideTeam\",\n"
-                            "                       date,\n"
-                            "                       \"idLeague\",\n"
-                            "                       stadium)\n"
-                            "                    VALUES ");
+                                                "INSERT INTO \"Match\"(\"homeTeam\",\n"
+                                                        "                      \"outsideTeam\",\n"
+                                                        "                       date,\n"
+                                                        "                       \"idLeague\",\n"
+                                                        "                       stadium)\n"
+                                                        "                    VALUES ");
 
 
-                    query = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo, statement->str);
+                    exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo, statement->str);
 
-                    int days = (nmb % 2 == 0) ? nmb -1 : nmb;
-                    for (int i=0; i<days; i++) {
-                        g_date_strftime(tempChar, 20, "%Y-%m-%d", date[0]);
-                        pointerChar = g_strdup(tempChar);
+                    nRound = roundRobinAlgorithm(nmb, &roundRobinArray);
 
-                        for (int j=0; j<nmb/2; j++) {
-                            int t1 = (j+i) % nmb;
-                            int t2 = (nmb - j -1 +  i) % nmb;
-                            
-                            if(t1 == 0 || t2 == 0)
-                                printf("%d & %d / Team n° %d vs team n° %d \n", i, j,t1, t2);
-                            if(tmp == 1)
-                                statement = g_string_append(statement, ", ");
-                            tmp = 1;
+                    if(roundRobinArray == NULL || nRound == -1)
+                        error = 1;
 
-                            statement = g_string_append(statement, "(");
-                            for (int l = 0; l < 5; ++l) {
-                                if(l != 4) {
-                                    g_string_append_printf(statement, "$%d,", k++);
-                                }else{
-                                    g_string_append_printf(statement, "$%d", k++);
-                                }
-                            }
-                            statement = g_string_append(statement, ")");
+                    if(error != 1){
 
+                        k = insertMatch(roundRobinArray, finalData, nmb, nRound, allMatchParam->mainParam->id, date[0], date[1], exec);
 
-                            bindParam(query, finalData[t1][0], m++);
-                            bindParam(query, finalData[t2][0], m++);
-                            bindParam(query, pointerChar, m++);
-                            bindParam(query, allMatchParam->mainParam->id, m++);
-                            bindParam(query, finalData[t1][1], m++);
+                        //exec->query = statement->str;
+                        queryResult = executePrepareStatement(exec);
+
+                        if(queryResult->error == 1){
+                            gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("An error has occured when inserting the match"), FALSE, FALSE, 0);
+                            error = 1;
                         }
-                        printf("\n \n");
-                        g_date_add_days(date[0], 7);
-                        if(i == 10)
-                            break;
+
+                        closePrepareStatement(exec, queryResult, NULL);
+
+                        if(error != 1){
+                            sprintf(errorMessage, "%d match have been created\n", k/ 5);
+                            gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new(errorMessage), FALSE, FALSE, 0);
+
+                            exec = prepareQuery(allMatchParam->mainParam->allCalbackParam->mainParam->databaseInfo,
+                                            "UPDATE \"League\"\n"
+                                            "SET configure = 1\n"
+                                            "WHERE id = $1");
+                            bindParam(exec, allMatchParam->mainParam->id, 0);
+
+                            queryResult = executePrepareStatement(exec);
+
+                            while(queryResult->error != 0)
+                                queryResult = executePrepareStatement(exec);
+
+                            closePrepareStatement(exec, queryResult, NULL);
+                        }
+                    }else{
+                        gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Internal error"), FALSE, FALSE, 0);
                     }
-
-                    query->query = statement->str;
-                    queryResult = executePrepareStatement(query);
-
-                    if(queryResult->error == 1)
-                        printf("error");
-
-                    closePrepareStatement(query, queryResult, NULL);
                 }
 
             }else{
                 gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Internal error"), FALSE, FALSE, 0);
-                error = 1;
+                return;
             }
-
         }
 
 
     }else{
         gtk_box_pack_start(GTK_BOX(errorWidget), gtk_label_new("Invalid date, please check your entry"), FALSE, FALSE, 0);
+        return;
     }
 
     if(errorWidget != NULL)

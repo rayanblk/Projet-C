@@ -26,4 +26,8 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data);
 
 void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data);
 
+int roundRobinAlgorithm(int numberOfTeam, int **** returnArray);
+
+int insertMatch(int *** allMatch, char *** data, int nmb, int nRound, char * leagueId, GDate * startDateFirstPart, GDate * startDateSecondPart, PrepareStatement * exec);
+
 #endif //PROJET_C_MAINFUNCTION_H

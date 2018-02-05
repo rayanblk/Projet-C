@@ -50,9 +50,6 @@ typedef struct CallBackParamWithId{
 typedef struct WindowCalendarParam{
     GtkWidget * destinationWidget;
     GtkWidget * calendarWindow;
-    gchar fileName[80];
-    gchar calendarWindowId[80];
-    gchar calendarId[80];
     gint day;
     gint month;
     gint year;
