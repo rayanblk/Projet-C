@@ -288,7 +288,7 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
         listStore = (GtkListStore *) gtk_builder_get_object(tabMainParam->builder, tabMainParam->listStoreId);
 
         if (listStore != NULL) {
-
+            printf("ok");
             gtk_list_store_clear(listStore);
 
             for (int k = 0; k < queryResult->numberOfrow; ++k) {
@@ -471,7 +471,6 @@ void openAddNewPlayerForm(GtkWidget *widget, gpointer *data) {
 void openAddNewStrikerForm(GtkWidget *widget, gpointer *data) {
 
     AllTabParam *mainParam = (AllTabParam *) data;
-    CallbackParam *newParam = (CallbackParam *) malloc(sizeof(CallbackParam));
     GtkWidget *window;
     GtkBuilder *builder;
     GtkWidget *button;
@@ -485,7 +484,7 @@ void openAddNewStrikerForm(GtkWidget *widget, gpointer *data) {
 
     loadGladeFile(&builder, "formWidget/newStriker.glade");
 
-    newParam->builder = builder;
+    mainParam->builder = builder;
 
     window = (GtkWidget *) gtk_builder_get_object(builder, "strikerAddForm");
 
@@ -495,14 +494,12 @@ void openAddNewStrikerForm(GtkWidget *widget, gpointer *data) {
         g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(closeDialogBox), window);
 
 
-    /*   button = (GtkWidget *) gtk_builder_get_object(builder, "playerAddFormCreateButton");
-
-       mainParam->mainParam = newParam;
+       button = (GtkWidget *) gtk_builder_get_object(builder, "strikerAddFormCreateButton");
 
        if (button != NULL)
-           g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewPlayer), mainParam);
+           g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(createNewStriker), mainParam);
 
-     */
+
     query = prepareQuery(mainParam->centralParam->databaseInfo, "SELECT\n"
             "  \"Player\".id,\n"
             "  \"Player\".firstname || ' ' || \"Player\".lastname AS \"fullName\"\n"
@@ -788,6 +785,89 @@ void createNewPlayer(GtkWidget *widget, gpointer *data) {
 
         }
         closePrepareStatement(query, queryResult, NULL);
+    }
+}
+
+void createNewStriker(GtkWidget *widget, gpointer *data) {
+    AllTabParam *allParam = (AllTabParam *) data;
+    GtkWidget *allEntry[3];
+    GtkWidget *currentBox;
+    char *param[3] = {0};
+    GtkWidget *label;
+    char *statement;
+    PrepareStatement *query;
+    QueryStatement *queryResult;
+    char errorMessage[1000] = {0};
+
+    allEntry[0] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerNameComboBox1");
+    allEntry[1] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerTeamComboBox");
+    allEntry[2] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerTimeEntry");
+
+    currentBox = (GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerAddFormBox");
+
+    if ((param[0] = (char *) gtk_combo_box_get_active_id(GTK_COMBO_BOX(allEntry[0]))) == NULL || strlen(param[0]) <= 0)
+        strcat(errorMessage, "Verify striker's name \n");
+
+    if ((param[1] = (char *) gtk_combo_box_get_active_id(GTK_COMBO_BOX(allEntry[1]))) == NULL || strlen(param[1]) <= 0)
+        strcat(errorMessage, "Verify striker's team \n");
+
+    if (strlen(param[2] = (char *) gtk_entry_get_text(GTK_ENTRY(allEntry[2]))) <= 0)
+        strcat(errorMessage, "Verify time of the goal \n");
+
+    if (strlen(errorMessage) > 0) {
+
+
+        if ((label = findChild(currentBox, "errorLabelName")) == NULL) {
+            label = gtk_label_new(errorMessage);
+            gtk_widget_set_name(label, "errorLabelName");
+            gtk_box_pack_start(GTK_BOX(currentBox), label, TRUE, TRUE, 2);
+        } else {
+            gtk_label_set_label(GTK_LABEL(label), errorMessage);
+        }
+
+        gtk_widget_show_all(currentBox);
+
+    } else {
+        if ((label = findChild(currentBox, "errorLabelName")) != NULL) {
+            gtk_widget_destroy(label);
+        }
+
+
+        statement = "INSERT INTO \"Striker\"\n"
+                "(\"idPlayer\",\"teamScorer\", time,\"idMatch\")\n"
+                "VALUES ($1,$2,$3,$4)";
+        query = prepareQuery(allParam->centralParam->databaseInfo, statement);
+        bindParam(query, param[0], 0);
+        bindParam(query, param[1], 1);
+        bindParam(query, param[2], 2);
+        bindParam(query, allParam->searchParam->id,3);
+        queryResult = executePrepareStatement(query);
+
+
+        if (queryResult->error == 1) {
+            if ((label = findChild(currentBox, "errorLabelName")) == NULL) {
+                label = gtk_label_new("Cannot insert in database");
+                gtk_widget_set_name(label, "errorLabelName");
+
+                gtk_box_pack_start(GTK_BOX(currentBox), label, TRUE, TRUE, 2);
+            } else {
+                gtk_label_set_label(GTK_LABEL(label), "Cannot insert in database");
+            }
+
+            gtk_widget_show_all(currentBox);
+
+        } else {
+            gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerAddForm"));
+
+            tabSearch(widget, (gpointer *) allParam->searchParam);
+
+        }
+        closePrepareStatement(query, queryResult, NULL);
+
+
+        /*
+         * Refresh list store
+         */
     }
 }
 
@@ -1091,6 +1171,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
     GtkTreeModel *model;
     GtkListStore *strikerListStore;
     TabSearch *mainParam = NULL;
+    GtkBuilder *builder = NULL;
     AllTabParam *completeTabParam = NULL;
     char *test;
     char ***strikerData = NULL;
@@ -1117,8 +1198,8 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
                 "FROM \"Striker\"\n"
                 "JOIN \"Team\" ON \"Striker\".\"teamScorer\" = \"Team\".id\n"
                 "JOIN \"Player\" ON \"Striker\".\"idPlayer\" = \"Player\".id\n");
-        strcpy(mainParam->listStoreId, "matchListStore");
-        mainParam->builder = allParam->builder;
+        strcpy(mainParam->listStoreId, "strikerStore");
+        mainParam->builder = builder;
         mainParam->numberOfParam = 0;
         mainParam->allSearchParam = NULL;
         mainParam->mainParam = allParam->mainParam;
@@ -1126,7 +1207,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
 
 
     if (completeTabParam != NULL) {
-        completeTabParam->builder = allParam->builder;
+        completeTabParam->builder = builder;
         completeTabParam->centralParam = allParam->mainParam;
         completeTabParam->searchParam = mainParam;
     }
@@ -1136,9 +1217,9 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
      * Get the dialog box
      * Display the value
      */
-    if ((error = loadGladeFile(&allParam->builder, "detailWidget/matchDetail.glade")) == NULL) {
+    if ((error = loadGladeFile(&builder, "detailWidget/matchDetail.glade")) == NULL) {
 
-        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "matchDetailWindow");
+        window = (GtkWidget *) gtk_builder_get_object(builder, "matchDetailWindow");
 
 
         if (window != NULL) {
@@ -1165,32 +1246,32 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
 
                 fetchResult(resultQuery, &finalData);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "homeTeamLabel");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "homeTeamLabel");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[0]);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "outsideTeamLabel");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "outsideTeamLabel");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "scoreMatchValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "scoreMatchValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[2]);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "statusValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "statusValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), getMatchStatus(finalData[3]));
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "dateValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "dateValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[4]);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "stadiumValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "stadiumValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[5]);
@@ -1213,7 +1294,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
             resultQuery = executePrepareStatement(query);
             fetchAllResult(resultQuery, &strikerData);
 
-            strikerListStore = (GtkListStore *) gtk_builder_get_object(allParam->builder, "matchListStore");
+            strikerListStore = (GtkListStore *) gtk_builder_get_object(builder, "matchListStore");
             for (int i = 0; i < resultQuery->numberOfrow; ++i) {
 
                 gtk_list_store_append(strikerListStore, &iter);
@@ -1221,7 +1302,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
                                    strikerData[i][2], 3, strikerData[i][3], -1);
             }
 
-            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newScorerButton");
+            tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "newScorerButton");
 
             strcpy(mainParam->id, test);
 
