@@ -288,7 +288,6 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
         listStore = (GtkListStore *) gtk_builder_get_object(tabMainParam->builder, tabMainParam->listStoreId);
 
         if (listStore != NULL) {
-            printf("ok");
             gtk_list_store_clear(listStore);
 
             for (int k = 0; k < queryResult->numberOfrow; ++k) {
@@ -795,8 +794,8 @@ void createNewStriker(GtkWidget *widget, gpointer *data) {
     char *param[3] = {0};
     GtkWidget *label;
     char *statement;
-    PrepareStatement *query;
-    QueryStatement *queryResult;
+    PrepareStatement *query = NULL;
+    QueryStatement *queryResult = NULL;
     char errorMessage[1000] = {0};
 
     allEntry[0] = (GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerNameComboBox1");
@@ -857,6 +856,32 @@ void createNewStriker(GtkWidget *widget, gpointer *data) {
             gtk_widget_show_all(currentBox);
 
         } else {
+
+            closePrepareStatement(query, queryResult, NULL);
+
+            query = NULL;
+            queryResult = NULL;
+
+            query = prepareQuery(allParam->centralParam->databaseInfo,
+                    "UPDATE \"Match\"\n"
+                            "SET \"numberOfGoalHomeTeam\" =\n"
+                            "                  CASE $1::INTEGER\n"
+                            "                    WHEN \"homeTeam\" THEN \"numberOfGoalHomeTeam\" + 1\n"
+                            "                    ELSE \"numberOfGoalHomeTeam\"\n"
+                            "                  END\n"
+                            ",\"numberOfGoalOutsideTeam\" =\n"
+                            "                  CASE $2::INTEGER\n"
+                            "                    WHEN \"outsideTeam\" THEN \"Match\".\"numberOfGoalOutsideTeam\" + 1\n"
+                            "                    ELSE \"numberOfGoalOutsideTeam\"\n"
+                            "                  END\n"
+                            "WHERE id = $3");
+
+            bindParam(query, param[1],0);
+            bindParam(query, param[1],1);
+            bindParam(query, allParam->searchParam->id,2);
+
+            queryResult = executePrepareStatement(query);
+
             gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
@@ -1198,8 +1223,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
                 "FROM \"Striker\"\n"
                 "JOIN \"Team\" ON \"Striker\".\"teamScorer\" = \"Team\".id\n"
                 "JOIN \"Player\" ON \"Striker\".\"idPlayer\" = \"Player\".id\n");
-        strcpy(mainParam->listStoreId, "strikerStore");
-        mainParam->builder = builder;
+        strcpy(mainParam->listStoreId, "matchListStore");
         mainParam->numberOfParam = 0;
         mainParam->allSearchParam = NULL;
         mainParam->mainParam = allParam->mainParam;
@@ -1221,6 +1245,8 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
 
         window = (GtkWidget *) gtk_builder_get_object(builder, "matchDetailWindow");
 
+        mainParam->builder = builder;
+        completeTabParam->builder = builder;
 
         if (window != NULL) {
 
@@ -1298,8 +1324,10 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
             for (int i = 0; i < resultQuery->numberOfrow; ++i) {
 
                 gtk_list_store_append(strikerListStore, &iter);
-                gtk_list_store_set(strikerListStore, &iter, 0, strikerData[i][0], 1, strikerData[i][1], 2,
-                                   strikerData[i][2], 3, strikerData[i][3], -1);
+                gtk_list_store_set(strikerListStore, &iter, 0, strikerData[i][0],
+                                                            1, strikerData[i][1],
+                                                            2, strikerData[i][2],
+                                                            3, strikerData[i][3], -1);
             }
 
             tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "newScorerButton");
@@ -1450,8 +1478,7 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
 
 
             if (temp != NULL)
-                g_signal_connect(G_OBJECT(temp), "icon-press", G_CALLBACK(openCalendar),
-                                 (gpointer *) calendarParam[0]);
+                g_signal_connect(G_OBJECT(temp), "icon-press", G_CALLBACK(openCalendar),(gpointer *) calendarParam[0]);
 
             temp = (GtkWidget *) gtk_builder_get_object(builder, "secondDateEntry");
 
