@@ -417,7 +417,6 @@ void initPlayerTreeView(GtkWidget *parentBox, CallbackParam *data) {
 
 }
 
-
 void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
 
     GtkListStore *listStore = NULL;
@@ -428,6 +427,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
     TabSearchParam **tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
     TabSearch *mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     GtkTreeView *tempView = NULL;
+    WindowCalendarParam * calendarParam = (WindowCalendarParam *) malloc(sizeof(WindowCalendarParam));
 
 
 
@@ -440,10 +440,11 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
                                     "\"HomeTeam\".\"name\" || ' vs '|| \"OutsideTeam\".\"name\" AS name,\n"
                                     "\"Match\".\"numberOfGoalHomeTeam\"|| '-' || \"Match\".\"numberOfGoalOutsideTeam\" AS goals,\n"
                                     " \"Match\".\"stadium\",\n"
-                                    " \"Match\".\"dateUpdate\"\n"
+                                    "to_char(\"Match\".\"date\", 'YYYY-MM-DD')\n"
                                     "FROM \"Match\"\n"
                                     "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
-                                    "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id");
+                                    "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id\n"
+                                    "ORDER BY \"Match\".date ASC, \"Match\".id ASC");
 
         fetchAllResult(queryResult, &finalData);
 
@@ -478,7 +479,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
 
         tabParam[2] = (TabSearchParam *) malloc(sizeof(TabSearchParam));
         if (tabParam[2] != NULL) {
-            strcpy(tabParam[2]->condition, "\"Match\".\"dateUpdate\" ILIKE $");
+            strcpy(tabParam[2]->condition, "to_char(\"Match\".\"date\", 'YYYY-MM-DD') ILIKE $");
             tabParam[2]->typeCondition = 1;
             strcpy(tabParam[2]->gtkEntryId, "dateMatchEntry");
         }
@@ -493,10 +494,11 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
                        "\"HomeTeam\".\"name\" || ' vs '|| \"OutsideTeam\".\"name\" AS name,\n"
                        "\"Match\".\"numberOfGoalHomeTeam\"|| '-' || \"Match\".\"numberOfGoalOutsideTeam\" AS goals,\n"
                        " \"Match\".\"stadium\",\n"
-                       " \"Match\".\"dateUpdate\"\n"
+                       "to_char(\"Match\".\"date\", 'YYYY-MM-DD')\n"
                        "FROM \"Match\"\n"
                        "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
-                       "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id");
+                       "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id"
+                       "ORDER BY \"Match\".date ASC, \"Match\".id ASC");
 
         mainParam->numberOfParam = 3;
 
@@ -507,6 +509,22 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
         if (button != NULL) {
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(tabSearch), mainParam);
         }
+
+        button = (GtkWidget *) gtk_builder_get_object(data->builder, "dateMatchEntry");
+
+
+        if (calendarParam != NULL) {
+
+            calendarParam->destinationWidget = button;
+            calendarParam->calendarWindow = NULL;
+            calendarParam->month = -1;
+            calendarParam->day = -1;
+            calendarParam->year = -1;
+        }
+
+
+        if (button != NULL)
+            g_signal_connect(G_OBJECT(button), "icon-press", G_CALLBACK(openCalendar),(gpointer *) calendarParam);
 
     }
 

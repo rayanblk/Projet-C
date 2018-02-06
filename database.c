@@ -148,16 +148,25 @@ QueryStatement * executePrepareStatement(PrepareStatement * prepareStatement){
         if(mainQuery != NULL){
             if(status == PGRES_COMMAND_OK || status == PGRES_TUPLES_OK){
                 mainQuery->error = 0;
-                mainQuery->numberOfcolumn = PQnfields(queryResult);
-                mainQuery->numberOfrow = PQntuples(queryResult);
+
+                if(status == PGRES_TUPLES_OK){
+                    mainQuery->numberOfcolumn = PQnfields(queryResult);
+                    mainQuery->numberOfrow = PQntuples(queryResult);
+                }else{
+                    mainQuery->numberOfcolumn = 0;
+                    mainQuery->numberOfrow = 0;
+                }
+
+                mainQuery->fetchType = 0;
                 mainQuery->activeRow = 0;
                 mainQuery->PGResult = queryResult;
             }else{
-                printf("%s \n", PQresultErrorMessage(queryResult));
+                printf("dfgddfhn%s \n", PQresultErrorMessage(queryResult));
                 mainQuery->error = 1;
                 mainQuery->numberOfcolumn = 0;
                 mainQuery->numberOfrow = 0;
                 mainQuery->activeRow = 0;
+                mainQuery->fetchType = -1;
                 mainQuery->PGResult = queryResult;
             }
         }
