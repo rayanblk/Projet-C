@@ -111,6 +111,8 @@
                   <object class="GtkComboBox" id="strikerNameComboBox1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">30</property>
+                    <property name="margin_right">30</property>
                     <property name="resize_mode">immediate</property>
                     <property name="model">strikerStore</property>
                     <property name="active">0</property>
@@ -123,7 +125,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>

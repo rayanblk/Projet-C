@@ -251,11 +251,24 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
          * Add to the statement condition
          * Add or no the END keyword
          */
+
         for (l = allCondition; l != NULL; l = l->next, i++) {
             if (i != 0)
                 finalStatement = g_string_append(finalStatement, " AND ");
 
             finalStatement = g_string_append(finalStatement, (gchar *) l->data);
+        }
+
+        if(tabMainParam->idTypeCondition == 1){
+            if(g_list_length(allCondition) > 0 && g_list_length(allValue) > 0){
+                finalStatement = g_string_append(finalStatement, " AND ");
+            }else{
+                finalStatement = g_string_append(finalStatement, " WHERE ");
+            }
+
+            finalStatement = g_string_append(finalStatement, tabMainParam->idCondition);
+            finalStatement = g_string_append(finalStatement, " = $");
+            g_string_append_printf(finalStatement, "%d", g_list_length(allCondition) + 1);
         }
 
         /*
@@ -272,6 +285,9 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
             bindParam(query, (gchar *) l->data, i);
         }
 
+        if(tabMainParam->idTypeCondition == 1){
+            bindParam(query, tabMainParam->id, g_list_length(allCondition) + 1);
+        }
         /*
          * Execute the statement
          * Fetch all the result
@@ -794,6 +810,7 @@ void createNewStriker(GtkWidget *widget, gpointer *data) {
     char *param[3] = {0};
     GtkWidget *label;
     char *statement;
+    char **finalData;
     PrepareStatement *query = NULL;
     QueryStatement *queryResult = NULL;
     char errorMessage[1000] = {0};
@@ -880,8 +897,28 @@ void createNewStriker(GtkWidget *widget, gpointer *data) {
             bindParam(query, param[1],1);
             bindParam(query, allParam->searchParam->id,2);
 
+
             queryResult = executePrepareStatement(query);
 
+            query = prepareQuery(allParam->centralParam->databaseInfo,"SELECT\n"
+                    "  \"numberOfGoalHomeTeam\"|| '-' || \"numberOfGoalOutsideTeam\"\n"
+                    "FROM \"Match\"\n"
+                    "WHERE \"Match\".id = $1");
+
+            bindParam(query,allParam->searchParam->id,0);
+            queryResult = executePrepareStatement(query);
+
+            fetchResult(queryResult,&finalData);
+
+            label = (GtkWidget *)gtk_builder_get_object(allParam->searchParam->builder,"scoreMatchValue");
+
+            if (label != NULL){
+                if(queryResult->numberOfrow > 0) {
+                    gtk_label_set_label(GTK_LABEL(label), finalData[0]);
+                } else{
+                    gtk_label_set_label(GTK_LABEL(label),"error");
+                }
+            }
             gtk_widget_destroy((GtkWidget *) gtk_builder_get_object(allParam->builder, "strikerAddForm"));
 
             tabSearch(widget, (gpointer *) allParam->searchParam);
@@ -1207,6 +1244,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
     PrepareStatement *query = NULL;
     QueryStatement *resultQuery = NULL;
     char **finalData = NULL;
+    char status[20] = {0};
 
     model = gtk_tree_view_get_model(treeView);
     gtk_tree_model_get_iter(model, &iter, path);
@@ -1223,10 +1261,14 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
                 "FROM \"Striker\"\n"
                 "JOIN \"Team\" ON \"Striker\".\"teamScorer\" = \"Team\".id\n"
                 "JOIN \"Player\" ON \"Striker\".\"idPlayer\" = \"Player\".id\n");
+
+
         strcpy(mainParam->listStoreId, "matchListStore");
         mainParam->numberOfParam = 0;
         mainParam->allSearchParam = NULL;
         mainParam->mainParam = allParam->mainParam;
+        strcpy(mainParam->idCondition,"\"Striker\".\"idMatch\"");
+        mainParam->idTypeCondition = 1;
     }
 
 
@@ -1271,6 +1313,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
             if (resultQuery->error != 1) {
 
                 fetchResult(resultQuery, &finalData);
+                strcpy(status,finalData[3]);
 
                 tempWidget = (GtkWidget *) gtk_builder_get_object(builder, "homeTeamLabel");
 
@@ -1335,7 +1378,16 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
             strcpy(mainParam->id, test);
 
             if (tempWidget != NULL)
-                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(openAddNewStrikerForm), (gpointer) completeTabParam);
+                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(openAddNewStrikerForm), (gpointer*) completeTabParam);
+
+            tempWidget = (GtkWidget *) gtk_builder_get_object(builder,"changeStatusButton");
+
+            if(tempWidget != NULL){
+                if(strcmp(status,"1") == 0 )
+                    gtk_widget_set_sensitive(tempWidget,FALSE);
+                g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(updateStatusMatch),(gpointer*) completeTabParam);
+
+        }
 
         } else {
             printf("%s \n", error->message);
@@ -1583,7 +1635,6 @@ void daySelect(GtkCalendar *calendar, gpointer *data) {
     calendarParam->month = month;
     calendarParam->year = year;
 }
-
 
 void newLeagueMatch(GtkWidget *widget, gpointer *data) {
 
@@ -1836,5 +1887,33 @@ void newLeagueMatch(GtkWidget *widget, gpointer *data) {
 
     g_free(currentTime);
     g_date_free(currentDate);
+
+}
+
+void updateStatusMatch(GtkWidget *widget, gpointer *data){
+    AllTabParam *completeTabParam = (AllTabParam *) data;
+    PrepareStatement *query = NULL;
+    QueryStatement *resultQuery = NULL;
+    GtkWidget *newStatus = NULL;
+
+    query = prepareQuery(completeTabParam->centralParam->databaseInfo,
+                         "UPDATE \"Match\"\n"
+                                 "SET status = 1\n"
+                                 "WHERE id = $1");
+
+    bindParam(query,completeTabParam->searchParam->id,0);
+    resultQuery = executePrepareStatement(query);
+
+    if(resultQuery->error == 0){
+        gtk_widget_set_sensitive(widget,FALSE);
+    }
+
+    newStatus = (GtkWidget *)gtk_builder_get_object(completeTabParam->builder,"statusValue");
+
+    if (newStatus != NULL)
+        gtk_label_set_label(GTK_LABEL(newStatus), getMatchStatus("1"));
+
+    closePrepareStatement(query,resultQuery,NULL);
+
 
 }
