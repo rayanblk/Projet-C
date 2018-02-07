@@ -540,6 +540,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
 void initNewsTreeView(GtkWidget *parentBox, CallbackParam *data){
 
     GtkWidget *tempWidget = NULL;
+    GtkTreeView *tempView = NULL;
     AllTabParam * tabParam = (AllTabParam *) calloc(1, sizeof(AllTabParam));
 
     tabParam->builder = data->builder;
@@ -549,6 +550,12 @@ void initNewsTreeView(GtkWidget *parentBox, CallbackParam *data){
 
     if(tempWidget != NULL)
         g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(searchArticle), (gpointer *) tabParam);
+
+
+    tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "newsTreeView");
+
+    if (tempView != NULL)
+        g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayNewsDetail), (gpointer) data);
 }
 
 int roundRobinAlgorithm(int numberOfTeam, int ****returnArray) {

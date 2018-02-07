@@ -2178,33 +2178,21 @@ void displayNewsDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColu
  * Get the dialog box
  * Display the value
  */
-    if ((error = loadGladeFile(&allParam->builder, "detailWidget/playerDetail.glade")) == NULL) {
+    if ((error = loadGladeFile(&allParam->builder, "detailWidget/newsDetail.glade")) == NULL) {
 
-        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailWindow");
+        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailWindow");
 
 
         if (window != NULL) {
 
             gtk_widget_show_all(window);
-            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailIdValue");
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailIdValue");
             gtk_tree_model_get(model, &iter, 0, &test, -1);
             if (tempWidget != NULL)
                 gtk_label_set_label(GTK_LABEL(tempWidget), test);
 
             query = prepareQuery(allParam->mainParam->databaseInfo,
-                                 "SELECT\n"
-                                         "\"Player\".id,\n"
-                                         "\"Player\".firstname || ' ' || \"Player\".lastname AS Name,\n"
-                                         "\"Team\".name as \"teamName\",\n"
-                                         "\"League\".name as \"leagueName\",\n"
-                                         "\"Position\".name as \"positionName\",\n"
-                                         "to_char(\"Player\".\"dateAdd\", 'YYYY-MM-DD') AS \"dateAdd\",\n"
-                                         "to_char(\"Player\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\"\n"
-                                         "FROM \"Player\"\n"
-                                         "JOIN \"Position\" ON \"Player\".\"idPosition\" = \"Position\".id\n"
-                                         "JOIN \"Team\" ON \"Player\".\"idTeam\" = \"Team\".id\n"
-                                         "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id\n"
-                                         "WHERE \"Player\".id = $1");
+                                 "select id,url,content,\"dateAdd\",\"dateUpdate\" FROM \"Article\" where id = $1");
 
             bindParam(query, test, 0);
 
@@ -2214,45 +2202,33 @@ void displayNewsDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColu
 
                 fetchResult(resultQuery, &finalData);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailNameValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailUrlValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
 
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailTeamValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailContentValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[2]);
 
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailLeagueValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailDateAddValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[3]);
 
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailPositionValue");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailDateUpdateValue");
 
                 if (tempWidget != NULL)
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[4]);
 
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailDateCreateValue");
-
-                if (tempWidget != NULL)
-                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[5]);
-
-
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailDateUpdateValue");
-
-                if (tempWidget != NULL)
-                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[6]);
-
-
                 closePrepareStatement(query, resultQuery, (char ***) finalData);
 
-                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "playerDetailCloseButton");
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailCloseButton");
 
                 if (tempWidget != NULL)
                     g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(closeDialogBox), (gpointer) window);
