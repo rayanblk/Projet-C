@@ -34,6 +34,8 @@ typedef struct TabSearch{
     GtkBuilder * builder;
     int numberOfParam;
     char id[20];
+    char idCondition[100];
+    int idTypeCondition;
     TabSearchParam ** allSearchParam;
     MainParam * mainParam;
 } TabSearch;
