@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.18.3 -->
+<interface>
+  <requires lib="gtk+" version="3.6"/>
+  <object class="GtkListStore" id="newsListStore">
+    <columns>
+      <!-- column-name Id -->
+      <column type="gchararray"/>
+      <!-- column-name Url -->
+      <column type="gchararray"/>
+      <!-- column-name Text -->
+      <column type="gchararray"/>
+      <!-- column-name Date retrieve -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkBox" id="newsTab">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkLabel" id="newsTabMainTitle">
+        <property name="height_request">80</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">News</property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="newsTabSearchBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkBox" id="idBox">
+            <property name="width_request">250</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="themeNewsLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Theme</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="themeNewsEntry">
+                <property name="height_request">35</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="margin_top">3</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="newsSearchButton">
+            <property name="label" translatable="yes">Search</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="border_width">30</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolledwindow1">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="shadow_type">in</property>
+        <child>
+          <object class="GtkTreeView" id="newsTreeView">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="model">newsListStore</property>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection" id="treeview-selection2"/>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="idColumn">
+                <property name="min_width">60</property>
+                <property name="title" translatable="yes">Id</property>
+                <property name="alignment">0.5</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellTextId"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="urlColumn">
+                <property name="title" translatable="yes">Url</property>
+                <property name="expand">True</property>
+                <property name="alignment">0.5</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellURL"/>
+                  <attributes>
+                    <attribute name="text">1</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="textColumn">
+                <property name="title" translatable="yes">Text</property>
+                <property name="expand">True</property>
+                <property name="alignment">0.5</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellText"/>
+                  <attributes>
+                    <attribute name="text">2</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="dateColumn">
+                <property name="sizing">autosize</property>
+                <property name="title" translatable="yes">Date</property>
+                <property name="expand">True</property>
+                <property name="alignment">0.5</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellTextDate"/>
+                  <attributes>
+                    <attribute name="text">3</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+  </object>
+</interface>

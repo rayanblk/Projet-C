@@ -14,21 +14,6 @@ int main(int argc,char **argv) {
     DatabaseConnector * mainDatabaseConnector = NULL;
     gtk_init(&argc, &argv);
 
-    long cursor = 0;
-    int temp;
-    GList * existHref = NULL;
-
-
-    getHtml("testx.html","http://www.footmercato.net");
-
-    getURL("testx.html","hrefs.html");
-
-
-    while((temp = browser("hrefs.html","ronaldo","http://www.footmercato.net/",&cursor,&existHref)) == 0){
-        getArticle("article.html");
-        printf("\n");
-    }
-
     mainWindowBuilder = gtk_builder_new();
 
     gtk_builder_add_from_file(mainWindowBuilder, "mainWindow.glade", &errorMessage);
@@ -56,6 +41,7 @@ int main(int argc,char **argv) {
         mainDatabaseConnector = connectToDatabase(connInfo);
 
         mainParam->databaseInfo = mainDatabaseConnector;
+
 
         /*
          * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
@@ -108,6 +94,13 @@ int main(int argc,char **argv) {
             g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
 
 
+
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "newsTab", "New", "mainTabWidget/newsTabContent.glade", initNewsTreeView, &allNotebookParam, mainParam);
+
+        button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageNewsButton");
+
+        if(button != NULL)
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
 
         /*
          * Show all child widget of main Window
