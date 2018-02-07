@@ -48,7 +48,9 @@ GtkWidget *findChild(GtkWidget *parent, const gchar *name) {
  * @param list
  * @return
  */
-CallbackParam * initAddNotebookTabButton(GtkBuilder *builder, char *parentName, char *objectName, char *objectLabel, char *fileName, void *function, GList **list, MainParam *mainParam) {
+CallbackParam *
+initAddNotebookTabButton(GtkBuilder *builder, char *parentName, char *objectName, char *objectLabel, char *fileName,
+                         void *function, GList **list, MainParam *mainParam) {
     CallbackParam *tempCallBackParam = NULL;
 
     tempCallBackParam = (CallbackParam *) malloc(sizeof(CallbackParam));
@@ -404,7 +406,8 @@ void initPlayerTreeView(GtkWidget *parentBox, CallbackParam *data) {
         completeTabParam->searchParam = mainParam;
 
         if (button != NULL) {
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm), (gpointer) completeTabParam);
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm),
+                             (gpointer) completeTabParam);
 
         }
 
@@ -427,8 +430,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
     TabSearchParam **tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
     TabSearch *mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     GtkTreeView *tempView = NULL;
-    WindowCalendarParam * calendarParam = (WindowCalendarParam *) malloc(sizeof(WindowCalendarParam));
-
+    WindowCalendarParam *calendarParam = (WindowCalendarParam *) malloc(sizeof(WindowCalendarParam));
 
 
     listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "matchListStore");
@@ -524,7 +526,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
 
 
         if (button != NULL)
-            g_signal_connect(G_OBJECT(button), "icon-press", G_CALLBACK(openCalendar),(gpointer *) calendarParam);
+            g_signal_connect(G_OBJECT(button), "icon-press", G_CALLBACK(openCalendar), (gpointer *) calendarParam);
 
     }
 
@@ -577,8 +579,8 @@ int roundRobinAlgorithm(int numberOfTeam, int ****returnArray) {
             roundRobinArray[1][0][i] = tmp;
         }
     }
-  
-  
+
+
     for (i = 1; i < nRound; ++i) {
         for (j = 0; j < numberOfTeam / 2; ++j) {
             for (l = 0; l < 2; ++l) {
@@ -639,7 +641,7 @@ void freeRoundRobinArray(int numberOfTeam, int ****arrayToFree) {
 
     int nRound = numberOfTeam - 1;
     int i, j, l, tmp;
-      for (i = 0; i < nRound * 2; ++i) {
+    for (i = 0; i < nRound * 2; ++i) {
 
         free((*arrayToFree)[0][i]);
         free((*arrayToFree)[1][i]);
@@ -655,13 +657,12 @@ void freeRoundRobinArray(int numberOfTeam, int ****arrayToFree) {
 }
 
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-    size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+    size_t written = fwrite(ptr, size, nmemb, (FILE *) stream);
     return written;
 }
 
-void getHtml (char * file  ,char * url ){
+void getHtml(char *file, char *url) {
 
     CURL *curl_handle;
     FILE *bodyfile;
@@ -677,7 +678,7 @@ void getHtml (char * file  ,char * url ){
 
     bodyfile = fopen(file, "wb");
 
-    if(!bodyfile) {
+    if (!bodyfile) {
         curl_easy_cleanup(curl_handle);
     }
 
@@ -689,35 +690,32 @@ void getHtml (char * file  ,char * url ){
 
 }
 
-void getURL (char * sourcefile , char * hreffile){
+void getURL(char *sourcefile, char *hreffile) {
     FILE *bodyfile;
     FILE *href;
 
     bodyfile = fopen(sourcefile, "r");
 
     char chaine[2000] = "";
-    char * res;
-    char * result;
-    char * temp;
-
+    char *res;
+    char *result;
+    char *temp;
 
 
     href = fopen(hreffile, "w+");
 
-    if (bodyfile != NULL)
-    {
-        while (fgets(chaine, 2000, bodyfile) != NULL)
-        {
+    if (bodyfile != NULL) {
+        while (fgets(chaine, 2000, bodyfile) != NULL) {
             res = strstr(chaine, "href");
 
-            if(res != NULL){
-                if((temp = strchr(res,'"')) != NULL)
+            if (res != NULL) {
+                if ((temp = strchr(res, '"')) != NULL)
                     result = temp + 1;
 
-                if((temp = strchr(result,'"')) != NULL)
+                if ((temp = strchr(result, '"')) != NULL)
                     *temp = 0;
 
-                fprintf(href,"%s\n",result);
+                fprintf(href, "%s\n", result);
             }
         }
         fclose(href);
@@ -725,111 +723,112 @@ void getURL (char * sourcefile , char * hreffile){
     }
 }
 
-int browser (char * sourcefile , char * research , char * url, long * cursorPosition, GList ** existHref){
-    char * res;
-    char * http;
-    GString * result;
+int browser(char *sourcefile, char *research, char *url, long *cursorPosition, GList **existHref) {
+    char *res;
+    char *http;
+    GString *result;
     FILE *searchfile;
-    searchfile = fopen(sourcefile,"r");
-    char search[2000] ="";
-    GList * temp = NULL;
+    searchfile = fopen(sourcefile, "r");
+    char search[2000] = "";
+    GList *temp = NULL;
     int condition = 0;
 
-    if(searchfile == NULL){
+    if (searchfile == NULL) {
         printf("Please verify your source file");
         return -1;
     }
 
     fseek(searchfile, *cursorPosition, SEEK_SET);
 
-    while(fgets(search,2000,searchfile) != NULL){
+    while (fgets(search, 2000, searchfile) != NULL) {
 
-        res = strstr(search,research);
+        res = strstr(search, research);
 
         search[strlen(search) - 1] = 0;
 
-        if(res != NULL){
-            http = strstr(search,"http");
+        if (res != NULL) {
+            http = strstr(search, "http");
             result = g_string_new(search);
 
-            if(http == NULL) {
+            if (http == NULL) {
                 condition = 0;
                 result = g_string_prepend(result, url);
-                for(temp = *existHref; temp != NULL ; temp = temp->next){
-                    if(strcmp((char *)temp->data,result->str) == 0){
+                for (temp = *existHref; temp != NULL; temp = temp->next) {
+                    if (strcmp((char *) temp->data, result->str) == 0) {
                         condition = 1;
                         break;
                     }
                 }
-                if(condition == 0) {
+                if (condition == 0) {
                     getHtml("article.html", result->str);
                     *cursorPosition = ftell(searchfile);
                     fclose(searchfile);
-                    *existHref = g_list_prepend(*existHref,(gpointer *)result->str);
+                    *existHref = g_list_prepend(*existHref, (gpointer *) result->str);
                     return 0;
                 }
 
             }
 
 
-            g_string_free (result,TRUE);
+            g_string_free(result, TRUE);
 
+        }
+        fclose(searchfile);
+
+        return -1;
     }
-    fclose(searchfile);
 
-    return -1;
 }
 
-void getArticle (char * sourcefile){
-    char * res;
-    char * result;
-    char * startP = NULL;
-    char * endP = NULL;
-    char * temp = NULL;
+void getArticle(char *sourcefile) {
+    char *res;
+    char *result;
+    char *startP = NULL;
+    char *endP = NULL;
+    char *temp = NULL;
 
     FILE *searchfile;
-    searchfile = fopen(sourcefile,"r");
-    char search[10000] ="";
-    char * tempSearch = NULL;
-    GString * article = g_string_new("");
+    searchfile = fopen(sourcefile, "r");
+    char search[10000] = "";
+    char *tempSearch = NULL;
+    GString *article = g_string_new("");
     int draw = 0;
     int numberOfDiv = 0;
 
 
-    if(searchfile == NULL){
+    if (searchfile == NULL) {
         printf("Please verify your source file");
     }
 
-    if(searchfile != NULL){
+    if (searchfile != NULL) {
 
 
-        while(fgets(search,10000,searchfile) != NULL){
+        while (fgets(search, 10000, searchfile) != NULL) {
 
-            res = strstr(search,"<h1 itemprop=\"headline\"");
+            res = strstr(search, "<h1 itemprop=\"headline\"");
 
             //search[strlen(search) - 1] = 0;
 
-            if(res != NULL){
-                if((temp = strchr(res,'>')) != NULL)
+            if (res != NULL) {
+                if ((temp = strchr(res, '>')) != NULL)
                     result = temp + 1;
 
-                if((temp = strchr(result,'<')) != NULL)
+                if ((temp = strchr(result, '<')) != NULL)
                     *temp = 0;
-                printf(" Title : %s\n",result);
+                printf(" Title : %s\n", result);
             }
         }
 
-        fseek(searchfile,0,SEEK_SET);
+        fseek(searchfile, 0, SEEK_SET);
 
 
+        while (((res = strstr(search, "class=\"line article-text\" itemprop=\"articleBody\">")) == NULL) &&
+               fgets(search, 2000, searchfile) != NULL);
 
-        while(((res = strstr(search,"class=\"line article-text\" itemprop=\"articleBody\">")) == NULL) && fgets(search,2000,searchfile) != NULL);
 
+        if (res != NULL) {
 
-
-        if(res != NULL){
-
-            while(res != NULL || fgets(search,10000,searchfile) != NULL){
+            while (res != NULL || fgets(search, 10000, searchfile) != NULL) {
 
                 //article = g_string_erase(article,0,-1);
                 tempSearch = strdup(search);
@@ -837,20 +836,20 @@ void getArticle (char * sourcefile){
 
                 res = NULL;
 
-                if ((endP = strstr(search, "</p>")) != NULL){
+                if ((endP = strstr(search, "</p>")) != NULL) {
                     draw = 0;
                     //printf("%s \n",endP);
                 }
 
                 // Quand on trouve notre p write = 1
-                if ((startP = strstr(search, "<p>")) != NULL){
+                if ((startP = strstr(search, "<p>")) != NULL) {
                     draw = 1;
                 }
 
                 // Quand on trouve notre p fermant write 0
 
 
-                if ((temp = strstr(search, "<div>")) != NULL){
+                if ((temp = strstr(search, "<div>")) != NULL) {
                     numberOfDiv++;
                 }
 
@@ -858,24 +857,23 @@ void getArticle (char * sourcefile){
 
 
 
-                if(endP != NULL){
+                if (endP != NULL) {
                     *endP = 0;
-                    article = g_string_append(article,search);
+                    article = g_string_append(article, search);
                 }
-                if(startP != NULL){
+                if (startP != NULL) {
                     article = g_string_append(article, startP + 3);
-                }
-                else if(draw == 1){
+                } else if (draw == 1) {
                     article = g_string_append(article, search);
                 }
 
-                if ((temp = strstr(tempSearch, "</div>")) != NULL){
-                    if(numberOfDiv == 0){
+                if ((temp = strstr(tempSearch, "</div>")) != NULL) {
+                    if (numberOfDiv == 0) {
                         *temp = 0;
                         fclose(searchfile);
-                        printf("%s\n",article->str);
+                        printf("%s\n", article->str);
                         return;
-                    }else{
+                    } else {
                         numberOfDiv--;
                     }
                 }
@@ -886,12 +884,12 @@ void getArticle (char * sourcefile){
         }
 
 
-
     }
     fclose(searchfile);
 }
 
-int insertMatch(int ***allMatch, char ***data, int nmb, int nRound, char *leagueId, GDate *startDateFirstPart, GDate *startDateSecondPart, PrepareStatement *exec) {
+int insertMatch(int ***allMatch, char ***data, int nmb, int nRound, char *leagueId, GDate *startDateFirstPart,
+                GDate *startDateSecondPart, PrepareStatement *exec) {
     int i, j, l, k = 1, n, tmp = 0, m = 0, loopInitializer, loopEnd;
     char tempChar[20];
     char *pointerChar;
