@@ -243,7 +243,6 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
             finalStatement = g_string_append(finalStatement, " WHERE ");
         }
 
-
         i = 0;
 
         /*
@@ -258,6 +257,7 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
 
             finalStatement = g_string_append(finalStatement, (gchar *) l->data);
         }
+
 
         if(tabMainParam->idTypeCondition == 1){
             if(g_list_length(allCondition) > 0 && g_list_length(allValue) > 0){
@@ -288,6 +288,7 @@ void tabSearch(GtkWidget *widget, gpointer *data) {
         if(tabMainParam->idTypeCondition == 1){
             bindParam(query, tabMainParam->id, g_list_length(allCondition) + 1);
         }
+
         /*
          * Execute the statement
          * Fetch all the result
@@ -1506,6 +1507,136 @@ void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
                         gtk_tree_store_append(GTK_TREE_STORE(listStore), &fatherIter, NULL);
                         gtk_tree_store_set(GTK_TREE_STORE(listStore), &fatherIter, 3, finalData[i + 1][3], -1);
                     }
+                }
+            }
+
+            closePrepareStatement(query, queryResult, finalData);
+
+
+            /*
+             * Match list store update
+             */
+            query = prepareQuery(allParam->allCalbackParam->mainParam->databaseInfo,
+                                 "SELECT\n"
+                                         "  \"Team\".name,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT SUM(\n"
+                                         "        CASE\n"
+                                         "          WHEN \"numberOfGoalOutsideTeam\" = \"numberOfGoalHomeTeam\" AND \"Match\".status = 1 THEN 1\n"
+                                         "          WHEN \"numberOfGoalOutsideTeam\" > \"numberOfGoalHomeTeam\" AND \"outsideTeam\" = \"Team\".Id AND \"Match\".status = 1 THEN 3\n"
+                                         "          WHEN \"numberOfGoalHomeTeam\" > \"numberOfGoalOutsideTeam\" AND \"homeTeam\" = \"Team\".Id AND \"Match\".status = 1 THEN 3\n"
+                                         "          ELSE 0\n"
+                                         "        END\n"
+                                         "      )FROM \"Match\" WHERE (\"outsideTeam\" = \"Team\".id OR  \"homeTeam\" = \"Team\".id)), 0) AS point,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT count(id)\n"
+                                         "        FROM \"Match\"\n"
+                                         "        WHERE (\"outsideTeam\" = \"Team\".id OR  \"homeTeam\" = \"Team\".id)\n"
+                                         "              AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      , 0\n"
+                                         "  ) AS numberOfMatchPlayed,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT count(id)\n"
+                                         "       FROM \"Match\"\n"
+                                         "       WHERE ((\"outsideTeam\" = \"Team\".id AND \"numberOfGoalOutsideTeam\" > \"numberOfGoalHomeTeam\")\n"
+                                         "              OR (\"homeTeam\" = \"Team\".id) AND \"numberOfGoalHomeTeam\" > \"numberOfGoalOutsideTeam\")\n"
+                                         "              AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      , 0\n"
+                                         "  ) AS W,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT count(id)\n"
+                                         "       FROM \"Match\"\n"
+                                         "       WHERE ((\"outsideTeam\" = \"Team\".id AND \"numberOfGoalOutsideTeam\" = \"numberOfGoalHomeTeam\")\n"
+                                         "              OR (\"homeTeam\" = \"Team\".id) AND \"numberOfGoalHomeTeam\" = \"numberOfGoalOutsideTeam\")\n"
+                                         "             AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      , 0\n"
+                                         "  )AS N,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT count(id)\n"
+                                         "       FROM \"Match\"\n"
+                                         "       WHERE ((\"outsideTeam\" = \"Team\".id AND \"numberOfGoalOutsideTeam\" < \"numberOfGoalHomeTeam\")\n"
+                                         "              OR (\"homeTeam\" = \"Team\".id) AND \"numberOfGoalHomeTeam\" < \"numberOfGoalOutsideTeam\")\n"
+                                         "             AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      ,0\n"
+                                         "  ) AS L,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT SUM(CASE\n"
+                                         "                  WHEN \"outsideTeam\" = \"Team\".id\n"
+                                         "                    THEN \"numberOfGoalOutsideTeam\"\n"
+                                         "                  WHEN \"homeTeam\" = \"Team\".id\n"
+                                         "                    THEN \"numberOfGoalHomeTeam\"\n"
+                                         "                  END)\n"
+                                         "       FROM \"Match\"\n"
+                                         "       WHERE (\"outsideTeam\" = \"Team\".id OR \"homeTeam\" = \"Team\".id)\n"
+                                         "             AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      , 0\n"
+                                         "  )AS put,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT SUM(CASE\n"
+                                         "                  WHEN \"outsideTeam\" = \"Team\".id\n"
+                                         "                    THEN \"numberOfGoalHomeTeam\"\n"
+                                         "                  WHEN \"homeTeam\" = \"Team\".id\n"
+                                         "                    THEN \"numberOfGoalOutsideTeam\"\n"
+                                         "                  END)\n"
+                                         "       FROM \"Match\"\n"
+                                         "       WHERE (\"outsideTeam\" = \"Team\".id OR \"homeTeam\" = \"Team\".id)\n"
+                                         "             AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      , 0\n"
+                                         "  )AS take,\n"
+                                         "  COALESCE(\n"
+                                         "      (SELECT SUM(CASE\n"
+                                         "                    WHEN \"outsideTeam\" = \"Team\".id THEN \"numberOfGoalOutsideTeam\"\n"
+                                         "                    WHEN \"homeTeam\" = \"Team\".id THEN \"numberOfGoalHomeTeam\"\n"
+                                         "                  END)\n"
+                                         "      FROM \"Match\"\n"
+                                         "      WHERE (\"outsideTeam\" = \"Team\".id OR  \"homeTeam\" = \"Team\".id)\n"
+                                         "            AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "        -\n"
+                                         "      (SELECT SUM(CASE\n"
+                                         "                    WHEN \"outsideTeam\" = \"Team\".id THEN \"numberOfGoalHomeTeam\"\n"
+                                         "                    WHEN \"homeTeam\" = \"Team\".id THEN \"numberOfGoalOutsideTeam\"\n"
+                                         "                  END\n"
+                                         "      )FROM \"Match\"\n"
+                                         "      WHERE (\"outsideTeam\" = \"Team\".id OR  \"homeTeam\" = \"Team\".id)\n"
+                                         "            AND \"Match\".status = 1\n"
+                                         "      )\n"
+                                         "      ,0\n"
+                                         "  ) AS diff\n"
+                                         "FROM \"Team\"\n"
+                                         "WHERE \"idLeague\" = $1\n"
+                                         "ORDER BY point DESC");
+
+            bindParam(query, allParam->id, 0);
+
+            finalData = NULL;
+
+            queryResult = executePrepareStatement(query);
+
+            if (queryResult->error != 1) {
+                fetchAllResult(queryResult, &finalData);
+
+                listStore = (GtkWidget *) gtk_builder_get_object(builder, "rankingListStore");
+
+                for (int i = 0; i < queryResult->numberOfrow; ++i) {
+                    gtk_list_store_append(GTK_LIST_STORE(listStore), &iter);
+                    gtk_list_store_set(GTK_LIST_STORE(listStore), &iter,
+                                       0, finalData[i][0],
+                                       1, finalData[i][1],
+                                       2, finalData[i][2],
+                                       3, finalData[i][3],
+                                       4, finalData[i][4],
+                                       5, finalData[i][5],
+                                       6, finalData[i][6],
+                                       7, finalData[i][7],
+                                       8, finalData[i][8],
+                                       -1);
                 }
             }
 
