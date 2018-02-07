@@ -1347,7 +1347,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
                     gtk_label_set_label(GTK_LABEL(tempWidget), finalData[5]);
             }
 
-            closePrepareStatement(query, resultQuery, finalData);
+            closePrepareStatement(query, resultQuery, &finalData);
 
             query = prepareQuery(allParam->mainParam->databaseInfo,
                                  "SELECT\n"

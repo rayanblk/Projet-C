@@ -24,7 +24,7 @@ int main(int argc,char **argv) {
     getURL("testx.html","hrefs.html");
 
 
-    while((temp = browser("hrefs.html","psg","http://www.footmercato.net/",&cursor,&existHref)) == 0){
+    while((temp = browser("hrefs.html","ronaldo","http://www.footmercato.net/",&cursor,&existHref)) == 0){
         getArticle("article.html");
         printf("\n");
     }
