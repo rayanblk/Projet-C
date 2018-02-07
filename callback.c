@@ -1405,11 +1405,11 @@ void searchArticle(GtkWidget *widget, gpointer *data){
     char * research = NULL;
     GtkTreeIter tempIter;
     GString *param = NULL, *statement = NULL;
-    PrepareStatement * query = NULL;
-    QueryStatement * resultQuery = NULL;
+    PrepareStatement *query = NULL, *existingQuery = NULL;
+    QueryStatement * resultQuery = NULL, *existingQueryResult = NULL;
     char * buffer, * title;
     char *** finalData = NULL;
-    int temp = 0;
+    int temp = 0, insert = 1;
     long cursor = 0;
     int i = 1;
     GList * existHref = NULL;
@@ -1425,6 +1425,21 @@ void searchArticle(GtkWidget *widget, gpointer *data){
         research = (char *) gtk_entry_get_text(GTK_ENTRY(tempWidget));
 
 
+    param = g_string_new("%");
+    param = g_string_append(param, research);
+    param = g_string_append(param, "%");
+
+    existingQuery = prepareQuery(mainParam->centralParam->databaseInfo,
+            "SELECT \n"
+            "  url\n"
+            "FROM \"Article\"\n"
+            "WHERE url ILIKE $1");
+
+    bindParam(existingQuery, param->str, 0);
+    existingQueryResult = executePrepareStatement(existingQuery);
+    fetchAllResult(existingQueryResult, &finalData);
+
+
     query = prepareQuery(mainParam->centralParam->databaseInfo, "");
 
     statement = g_string_append(statement,
@@ -1435,21 +1450,37 @@ void searchArticle(GtkWidget *widget, gpointer *data){
 
     getURL("testx.html","hrefs.html");
 
-
     while((temp = browser("hrefs.html",research,"http://www.footmercato.net/",&cursor,&existHref)) == 0){
+        buffer = NULL;
+        insert = 1;
+
         getArticle("article.html", &buffer, &title);
-        clearHTMLData(&buffer);
+        if(buffer != NULL && strlen(buffer) > 0){
+            clearHTMLData(&buffer);
+        }else{
+            insert = 0;
+        }
 
-        if(i != 1)
-            statement = g_string_append(statement, ",");
+        for (int j = 0; j < existingQueryResult->numberOfrow; ++j) {
+            if(strcmp(g_list_first(existHref)->data, finalData[j][0]) == 0){
+                insert = 0;
+                break;
+            }
+        }
 
-        g_string_append_printf(statement, " ($%d, $%d, $%d) ", i, i + 1, i + 2);
+        if(insert == 1){
+            if(i != 1)
+                statement = g_string_append(statement, ",");
+
+            g_string_append_printf(statement, " ($%d, $%d, $%d) ", i, i + 1, i + 2);
 
 
-        bindParam(query, (char *) g_list_first(existHref)->data, i - 1);
-        bindParam(query, title, i);
-        bindParam(query, buffer, i + 1);
-        i+= 3;
+            bindParam(query, (char *) g_list_first(existHref)->data, i - 1);
+            bindParam(query, title, i);
+            bindParam(query, buffer, i + 1);
+            i+= 3;
+        }
+
     }
     if(i > 1){
 
@@ -1458,6 +1489,7 @@ void searchArticle(GtkWidget *widget, gpointer *data){
     }
 
     closePrepareStatement(query, resultQuery, NULL);
+    closePrepareStatement(existingQuery, existingQueryResult, finalData);
     g_string_free(statement, TRUE);
 
     query = NULL;
@@ -1473,15 +1505,13 @@ void searchArticle(GtkWidget *widget, gpointer *data){
             "FROM \"Article\"\n"
             "WHERE url ILIKE $1");
 
-    param = g_string_new("%");
-    param = g_string_append(param, research);
-    param = g_string_append(param, "%");
-
     bindParam(query, param->str, 0);
 
     resultQuery = executePrepareStatement(query);
 
     fetchAllResult(resultQuery, &finalData);
+
+    gtk_list_store_clear(GTK_LIST_STORE(listStore));
 
     for (i = 0; i < resultQuery->numberOfrow; ++i){
         gtk_list_store_append(GTK_LIST_STORE(listStore), &tempIter);
