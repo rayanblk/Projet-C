@@ -1405,11 +1405,11 @@ void searchArticle(GtkWidget *widget, gpointer *data){
     char * research = NULL;
     GtkTreeIter tempIter;
     GString *param = NULL, *statement = NULL;
-    PrepareStatement * query = NULL;
-    QueryStatement * resultQuery = NULL;
+    PrepareStatement *query = NULL, *existingQuery = NULL;
+    QueryStatement * resultQuery = NULL, *existingQueryResult = NULL;
     char * buffer, * title;
     char *** finalData = NULL;
-    int temp = 0;
+    int temp = 0, insert = 1;
     long cursor = 0;
     int i = 1;
     GList * existHref = NULL;
@@ -1425,6 +1425,21 @@ void searchArticle(GtkWidget *widget, gpointer *data){
         research = (char *) gtk_entry_get_text(GTK_ENTRY(tempWidget));
 
 
+    param = g_string_new("%");
+    param = g_string_append(param, research);
+    param = g_string_append(param, "%");
+
+    existingQuery = prepareQuery(mainParam->centralParam->databaseInfo,
+            "SELECT \n"
+            "  url\n"
+            "FROM \"Article\"\n"
+            "WHERE url ILIKE $1");
+
+    bindParam(existingQuery, param->str, 0);
+    existingQueryResult = executePrepareStatement(existingQuery);
+    fetchAllResult(existingQueryResult, &finalData);
+
+
     query = prepareQuery(mainParam->centralParam->databaseInfo, "");
 
     statement = g_string_append(statement,
@@ -1435,21 +1450,36 @@ void searchArticle(GtkWidget *widget, gpointer *data){
 
     getURL("testx.html","hrefs.html");
 
-
     while((temp = browser("hrefs.html",research,"http://www.footmercato.net/",&cursor,&existHref)) == 0){
+        buffer = NULL;
+        insert = 1;
+
         getArticle("article.html", &buffer, &title);
-        clearHTMLData(&buffer);
+        if(buffer != NULL && strlen(buffer) > 0){
+            clearHTMLData(&buffer);
+        }else{
+            insert = 0;
+        }
 
-        if(i != 1)
-            statement = g_string_append(statement, ",");
+        for (int j = 0; j < existingQueryResult->numberOfrow; ++j) {
+            if(strcmp(g_list_first(existHref)->data, finalData[j][0]) == 0){
+                insert = 0;
+                break;
+            }
+        }
 
-        g_string_append_printf(statement, " ($%d, $%d, $%d) ", i, i + 1, i + 2);
+        if(insert == 1){
+            if(i != 1)
+                statement = g_string_append(statement, ",");
+
+            g_string_append_printf(statement, " ($%d, $%d, $%d) ", i, i + 1, i + 2);
 
 
-        bindParam(query, (char *) g_list_first(existHref)->data, i - 1);
-        bindParam(query, title, i);
-        bindParam(query, buffer, i + 1);
-        i+= 3;
+            bindParam(query, (char *) g_list_first(existHref)->data, i - 1);
+            bindParam(query, title, i);
+            bindParam(query, buffer, i + 1);
+            i+= 3;
+        }
     }
     if(i > 1){
 
@@ -1458,6 +1488,7 @@ void searchArticle(GtkWidget *widget, gpointer *data){
     }
 
     closePrepareStatement(query, resultQuery, NULL);
+    closePrepareStatement(existingQuery, existingQueryResult, finalData);
     g_string_free(statement, TRUE);
 
     query = NULL;
@@ -1473,15 +1504,13 @@ void searchArticle(GtkWidget *widget, gpointer *data){
             "FROM \"Article\"\n"
             "WHERE url ILIKE $1");
 
-    param = g_string_new("%");
-    param = g_string_append(param, research);
-    param = g_string_append(param, "%");
-
     bindParam(query, param->str, 0);
 
     resultQuery = executePrepareStatement(query);
 
     fetchAllResult(resultQuery, &finalData);
+
+    gtk_list_store_clear(GTK_LIST_STORE(listStore));
 
     for (i = 0; i < resultQuery->numberOfrow; ++i){
         gtk_list_store_append(GTK_LIST_STORE(listStore), &tempIter);
@@ -2142,5 +2171,90 @@ void updateStatusMatch(GtkWidget *widget, gpointer *data){
 
     closePrepareStatement(query,resultQuery,NULL);
 
+
+}
+
+void displayNewsDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColumn *column, gpointer *data) {
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    char *test;
+    CallbackParam *allParam = (CallbackParam *) data;
+    GError *error = NULL;
+    GtkWidget *window = NULL;
+    GtkWidget *tempWidget = NULL;
+    PrepareStatement *query = NULL;
+    QueryStatement *resultQuery = NULL;
+    char **finalData = NULL;
+
+    model = gtk_tree_view_get_model(treeView);
+    gtk_tree_model_get_iter(model, &iter, path);
+
+
+/*
+ * Get the dialog box
+ * Display the value
+ */
+    if ((error = loadGladeFile(&allParam->builder, "detailWidget/newsDetail.glade")) == NULL) {
+
+        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailWindow");
+
+
+        if (window != NULL) {
+
+            gtk_widget_show_all(window);
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailIdValue");
+            gtk_tree_model_get(model, &iter, 0, &test, -1);
+            if (tempWidget != NULL)
+                gtk_label_set_label(GTK_LABEL(tempWidget), test);
+
+            query = prepareQuery(allParam->mainParam->databaseInfo,
+                                 "select id,url,content,\"dateAdd\",\"dateUpdate\" FROM \"Article\" where id = $1");
+
+            bindParam(query, test, 0);
+
+            resultQuery = executePrepareStatement(query);
+
+            if (resultQuery->error != 1) {
+
+                fetchResult(resultQuery, &finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailUrlValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailContentValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[2]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailDateAddValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[3]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailDateUpdateValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[4]);
+
+
+                closePrepareStatement(query, resultQuery, (char ***) finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailCloseButton");
+
+                if (tempWidget != NULL)
+                    g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(closeDialogBox), (gpointer) window);
+
+            }
+        }
+
+    } else {
+        printf("%s \n", error->message);
+        g_error_free(error);
+    }
 
 }
