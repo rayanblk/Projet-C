@@ -1398,6 +1398,102 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
     }
 }
 
+void searchArticle(GtkWidget *widget, gpointer *data){
+    AllTabParam * mainParam = (AllTabParam *) data;
+    GtkWidget * listStore = NULL;
+    GtkWidget * tempWidget = NULL;
+    char * research = NULL;
+    GtkTreeIter tempIter;
+    GString *param = NULL, *statement = NULL;
+    PrepareStatement * query = NULL;
+    QueryStatement * resultQuery = NULL;
+    char * buffer, * title;
+    char *** finalData = NULL;
+    int temp = 0;
+    long cursor = 0;
+    int i = 1;
+    GList * existHref = NULL;
+
+    listStore = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "newsListStore");
+
+    tempWidget = (GtkWidget *) gtk_builder_get_object(mainParam->builder, "themeNewsEntry");
+
+    param = g_string_new("");
+    statement = g_string_new("");
+
+    if(tempWidget != NULL)
+        research = (char *) gtk_entry_get_text(GTK_ENTRY(tempWidget));
+
+
+    query = prepareQuery(mainParam->centralParam->databaseInfo, "");
+
+    statement = g_string_append(statement,
+                                "INSERT INTO \"Article\"(url, title, content) \n"
+                                "    VALUES ");
+
+    getHtml("testx.html","http://www.footmercato.net");
+
+    getURL("testx.html","hrefs.html");
+
+
+    while((temp = browser("hrefs.html",research,"http://www.footmercato.net/",&cursor,&existHref)) == 0){
+        getArticle("article.html", &buffer, &title);
+        clearHTMLData(&buffer);
+
+        if(i != 1)
+            statement = g_string_append(statement, ",");
+
+        g_string_append_printf(statement, " ($%d, $%d, $%d) ", i, i + 1, i + 2);
+
+
+        bindParam(query, (char *) g_list_first(existHref)->data, i - 1);
+        bindParam(query, title, i);
+        bindParam(query, buffer, i + 1);
+        i+= 3;
+    }
+    if(i > 1){
+
+        query->query = statement->str;
+        resultQuery = executePrepareStatement(query);
+    }
+
+    closePrepareStatement(query, resultQuery, NULL);
+    g_string_free(statement, TRUE);
+
+    query = NULL;
+    resultQuery = NULL;
+
+    query = prepareQuery(mainParam->centralParam->databaseInfo,
+            "SELECT\n"
+            "  id,\n"
+            "  url,\n"
+            "  title,\n"
+            "  content,\n"
+            "  TO_CHAR(\"dateAdd\", 'YYYY-MM-DD HH24:MI')\n"
+            "FROM \"Article\"\n"
+            "WHERE url ILIKE $1");
+
+    param = g_string_new("%");
+    param = g_string_append(param, research);
+    param = g_string_append(param, "%");
+
+    bindParam(query, param->str, 0);
+
+    resultQuery = executePrepareStatement(query);
+
+    fetchAllResult(resultQuery, &finalData);
+
+    for (i = 0; i < resultQuery->numberOfrow; ++i){
+        gtk_list_store_append(GTK_LIST_STORE(listStore), &tempIter);
+        gtk_list_store_set(GTK_LIST_STORE(listStore), &tempIter,
+                           0, finalData[i][0],
+                           1, finalData[i][2],
+                           2, finalData[i][3],
+                           3, finalData[i][4],
+                           -1);
+    }
+}
+
 void openMoreDetailLeague(GtkWidget *widget, gpointer *data) {
 
     CallBackParamWithId *allParam = (CallBackParamWithId *) data;
