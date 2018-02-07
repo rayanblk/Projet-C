@@ -14,7 +14,6 @@ int main(int argc,char **argv) {
     DatabaseConnector * mainDatabaseConnector = NULL;
     gtk_init(&argc, &argv);
 
-
     mainWindowBuilder = gtk_builder_new();
 
     gtk_builder_add_from_file(mainWindowBuilder, "mainWindow.glade", &errorMessage);
@@ -42,6 +41,7 @@ int main(int argc,char **argv) {
         mainDatabaseConnector = connectToDatabase(connInfo);
 
         mainParam->databaseInfo = mainDatabaseConnector;
+
 
         /*
          * Init with initAddNotebookTabButton, all param needed by the button signal and save on GList
@@ -95,6 +95,13 @@ int main(int argc,char **argv) {
 
 
 
+        initAddNotebookTabButton(mainWindowBuilder, "mainNotebook", "newsTab", "New", "mainTabWidget/newsTabContent.glade", initNewsTreeView, &allNotebookParam, mainParam);
+
+        button = (GtkWidget *) gtk_builder_get_object(mainWindowBuilder, "homeTabLinkGridManageNewsButton");
+
+        if(button != NULL)
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openNotebookTab), (gpointer) g_list_first(allNotebookParam)->data);
+
         /*
          * Show all child widget of main Window
          */
@@ -109,6 +116,11 @@ int main(int argc,char **argv) {
          * Free the GList of button
          */
         g_list_free(allNotebookParam);
+
+
+
+
+
 
         endConnectionToDatabase(mainDatabaseConnector);
 

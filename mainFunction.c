@@ -48,7 +48,9 @@ GtkWidget *findChild(GtkWidget *parent, const gchar *name) {
  * @param list
  * @return
  */
-CallbackParam * initAddNotebookTabButton(GtkBuilder *builder, char *parentName, char *objectName, char *objectLabel, char *fileName, void *function, GList **list, MainParam *mainParam) {
+CallbackParam *
+initAddNotebookTabButton(GtkBuilder *builder, char *parentName, char *objectName, char *objectLabel, char *fileName,
+                         void *function, GList **list, MainParam *mainParam) {
     CallbackParam *tempCallBackParam = NULL;
 
     tempCallBackParam = (CallbackParam *) malloc(sizeof(CallbackParam));
@@ -404,7 +406,8 @@ void initPlayerTreeView(GtkWidget *parentBox, CallbackParam *data) {
         completeTabParam->searchParam = mainParam;
 
         if (button != NULL) {
-            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm), (gpointer) completeTabParam);
+            g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(openAddNewPlayerForm),
+                             (gpointer) completeTabParam);
 
         }
 
@@ -427,8 +430,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
     TabSearchParam **tabParam = (TabSearchParam **) malloc(2 * sizeof(TabSearchParam *));
     TabSearch *mainParam = (TabSearch *) malloc(sizeof(TabSearch));
     GtkTreeView *tempView = NULL;
-    WindowCalendarParam * calendarParam = (WindowCalendarParam *) malloc(sizeof(WindowCalendarParam));
-
+    WindowCalendarParam *calendarParam = (WindowCalendarParam *) malloc(sizeof(WindowCalendarParam));
 
 
     listStore = (GtkListStore *) gtk_builder_get_object(data->builder, "matchListStore");
@@ -498,7 +500,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
                        "FROM \"Match\"\n"
                        "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
                        "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id"
-                       "ORDER BY \"Match\".date ASC, \"Match\".id ASC");
+                       );
 
         mainParam->numberOfParam = 3;
 
@@ -524,7 +526,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
 
 
         if (button != NULL)
-            g_signal_connect(G_OBJECT(button), "icon-press", G_CALLBACK(openCalendar),(gpointer *) calendarParam);
+            g_signal_connect(G_OBJECT(button), "icon-press", G_CALLBACK(openCalendar), (gpointer *) calendarParam);
 
     }
 
@@ -533,6 +535,20 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
     if (tempView != NULL) {
         g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayMatchDetail), (gpointer) data);
     }
+}
+
+void initNewsTreeView(GtkWidget *parentBox, CallbackParam *data){
+
+    GtkWidget *tempWidget = NULL;
+    AllTabParam * tabParam = (AllTabParam *) calloc(1, sizeof(AllTabParam));
+
+    tabParam->builder = data->builder;
+    tabParam->centralParam = data->mainParam;
+
+    tempWidget = (GtkWidget *) gtk_builder_get_object(data->builder, "newsSearchButton");
+
+    if(tempWidget != NULL)
+        g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(searchArticle), (gpointer *) tabParam);
 }
 
 int roundRobinAlgorithm(int numberOfTeam, int ****returnArray) {
@@ -577,6 +593,7 @@ int roundRobinAlgorithm(int numberOfTeam, int ****returnArray) {
             roundRobinArray[1][0][i] = tmp;
         }
     }
+
 
     for (i = 1; i < nRound; ++i) {
         for (j = 0; j < numberOfTeam / 2; ++j) {
@@ -638,7 +655,6 @@ void freeRoundRobinArray(int numberOfTeam, int ****arrayToFree) {
 
     int nRound = numberOfTeam - 1;
     int i, j, l, tmp;
-
     for (i = 0; i < nRound * 2; ++i) {
 
         free((*arrayToFree)[0][i]);
@@ -713,5 +729,309 @@ int insertMatch(int ***allMatch, char ***data, int nmb, int nRound, char *league
 
 
     return k;
+
+}
+
+
+/*
+ * Curl function
+ */
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
+    size_t written = fwrite(ptr, size, nmemb, (FILE *) stream);
+    return written;
+}
+
+void getHtml(char *file, char *url) {
+
+    CURL *curl_handle;
+    FILE *bodyfile;
+
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl_handle = curl_easy_init();
+
+
+    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+    curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+
+
+    bodyfile = fopen(file, "wb");
+
+    if (!bodyfile) {
+        curl_easy_cleanup(curl_handle);
+    }
+
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, bodyfile);
+    curl_easy_perform(curl_handle);
+    fclose(bodyfile);
+    curl_easy_cleanup(curl_handle);
+
+
+}
+
+void getURL(char *sourcefile, char *hreffile) {
+    FILE *bodyfile;
+    FILE *href;
+
+    bodyfile = fopen(sourcefile, "r");
+
+    char chaine[2000] = "";
+    char *res;
+    char *result;
+    char *temp;
+
+
+    href = fopen(hreffile, "w+");
+
+    if (bodyfile != NULL) {
+        while (fgets(chaine, 2000, bodyfile) != NULL) {
+            res = strstr(chaine, "href");
+
+            if (res != NULL) {
+                if ((temp = strchr(res, '"')) != NULL)
+                    result = temp + 1;
+
+                if ((temp = strchr(result, '"')) != NULL)
+                    *temp = 0;
+
+                fprintf(href, "%s\n", result);
+            }
+        }
+        fclose(href);
+        fclose(bodyfile);
+    }
+}
+
+int browser(char *sourcefile, char *research, char *url, long *cursorPosition, GList **existHref) {
+    char *res;
+    char *http;
+    GString *result;
+    FILE *searchfile;
+    searchfile = fopen(sourcefile, "r");
+    char search[2000] = "";
+    GList *temp = NULL;
+    int condition = 0;
+
+    if (searchfile == NULL) {
+        printf("Please verify your source file");
+        return -1;
+    }
+
+    research = g_utf8_strdown(research, -1);
+
+    fseek(searchfile, *cursorPosition, SEEK_SET);
+
+    while (fgets(search, 2000, searchfile) != NULL) {
+        strcpy(search, g_utf8_strdown(search, -1));
+
+        res = strstr(search, research);
+
+        search[strlen(search) - 1] = 0;
+
+        if (res != NULL) {
+            http = strstr(search, "http");
+            result = g_string_new(search);
+
+            if (http == NULL) {
+                condition = 0;
+                result = g_string_prepend(result, url);
+                for (temp = *existHref; temp != NULL; temp = temp->next) {
+                    if (strcmp((char *) temp->data, result->str) == 0) {
+                        condition = 1;
+                        break;
+                    }
+                }
+                if (condition == 0) {
+                    getHtml("article.html", result->str);
+                    *cursorPosition = ftell(searchfile);
+                    fclose(searchfile);
+                    *existHref = g_list_prepend(*existHref, (gpointer *) result->str);
+                    return 0;
+                }
+
+            }
+
+
+            g_string_free(result, TRUE);
+
+        }
+
+    }
+
+    fclose(searchfile);
+
+    return -1;
+
+}
+
+void getArticle(char *sourcefile, char ** buffer, char ** title) {
+    char *res;
+    char *result;
+    char *startP = NULL;
+    char *endP = NULL;
+    char * divP = NULL;
+    char *temp = NULL;
+
+    FILE *searchfile;
+    searchfile = fopen(sourcefile, "r");
+    char * search = (char *) malloc(10000 * sizeof(char));
+    char *tempSearch = NULL;
+    GString *article = g_string_new("");
+    int draw = 0;
+    int numberOfDiv = 0;
+
+
+    if (searchfile == NULL) {
+        printf("Please verify your source file");
+    }
+
+    if (searchfile != NULL) {
+
+
+        while (fgets(search, 10000, searchfile) != NULL) {
+
+            res = strstr(search, "<h1 itemprop=\"headline\"");
+
+            //search[strlen(search) - 1] = 0;
+
+            if (res != NULL) {
+                if ((temp = strchr(res, '>')) != NULL)
+                    result = temp + 1;
+
+                if ((temp = strchr(result, '<')) != NULL)
+                    *temp = 0;
+
+                *title = strdup(result);
+            }
+        }
+
+        fseek(searchfile, 0, SEEK_SET);
+
+
+        while (((res = strstr(search, "class=\"line article-text\" itemprop=\"articleBody\">")) == NULL) &&
+               fgets(search, 2000, searchfile) != NULL);
+
+
+        if (res != NULL) {
+
+            while (res != NULL || fgets(search, 10000, searchfile) != NULL) {
+
+                //article = g_string_erase(article,0,-1);
+
+
+
+                res = NULL;
+
+                do{
+
+                    tempSearch = strdup(search);
+
+                    if ((endP = strstr(search, "</p>")) != NULL) {
+                        draw = 0;
+                    }
+
+                    // Quand on trouve notre p write = 1
+                    if ((startP = strstr(search, "<p>")) != NULL) {
+                        draw = 1;
+                    }
+
+                    // Quand on trouve notre p fermant write 0
+
+
+                    if ((temp = strstr(search, "<div>")) != NULL) {
+                        numberOfDiv++;
+                    }
+
+
+                    if(endP != NULL && startP!=NULL){
+
+                        if(startP > endP){
+                            *endP = 0;
+                            article = g_string_append(article, search);
+                            article = g_string_append(article, startP + 3);
+                            search += strlen(startP) - 1;
+
+                        }else if(endP > startP){
+                            *endP = 0;
+                            article = g_string_append(article, startP + 3);
+                            search = endP + 1;
+                        }
+
+                    }else if(endP != NULL && startP == NULL){
+                        *endP = 0;
+                        article = g_string_append(article, search);
+                        search = endP + 1;
+
+                    }else if(startP != NULL && endP == NULL){
+
+                        article = g_string_append(article, startP + 3);
+                        search += strlen(search) - 1;
+
+                    }else if (draw == 1) {
+                        article = g_string_append(article, search);
+                        search += strlen(search) - 1;
+                    }
+
+                    if ((divP = strstr(tempSearch, "</div>")) != NULL) {
+
+                        if (numberOfDiv == 0) {
+
+                            *divP = 0;
+                            *buffer = article->str;
+
+                            if(startP == NULL && endP == NULL){
+                                fclose(searchfile);
+                                return;
+                            }
+
+                        } else {
+                            numberOfDiv--;
+                            search = divP + 1;
+                        }
+                    }
+                    g_free(tempSearch);
+
+                }while(startP != NULL || endP != NULL || divP != NULL);
+
+            }
+
+        }
+
+    }
+    fclose(searchfile);
+}
+
+void clearHTMLData(char ** buffer){
+    GString * tempString = g_string_new(*buffer);
+    char * tempChar = tempString->str;
+    char * test = strdup(tempString->str);
+    char * startChar = NULL;
+    char * endChar = NULL;
+
+    do{
+        startChar = strchr(tempString->str, '<');
+        endChar = strchr(tempString->str, '>');
+
+        if(startChar != NULL && endChar != NULL){
+            if(endChar < startChar){
+                tempString = g_string_erase(tempString, (gssize) (endChar - tempString->str), 1);
+            }else{
+                tempString = g_string_erase(tempString, (gssize) (startChar - tempString->str), (gssize) (endChar - startChar + 1));
+            }
+        }
+
+        if(startChar != NULL && endChar == NULL)
+            tempString = g_string_erase(tempString, (gssize) (startChar - tempString->str), -1);
+
+
+    }while(startChar != NULL || endChar != NULL);
+
+    if(*buffer != NULL){
+        *buffer = tempString->str;
+    }
+
+
+    g_string_free(tempString, FALSE);
+
 
 }
