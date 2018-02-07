@@ -500,7 +500,7 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
                        "FROM \"Match\"\n"
                        "JOIN \"Team\" as \"HomeTeam\" on \"Match\".\"homeTeam\" = \"HomeTeam\".id\n"
                        "JOIN \"Team\" as \"OutsideTeam\" on \"Match\".\"outsideTeam\" = \"OutsideTeam\".id"
-                       "ORDER BY \"Match\".date ASC, \"Match\".id ASC");
+                       );
 
         mainParam->numberOfParam = 3;
 
@@ -535,6 +535,20 @@ void initMatchTreeView(GtkWidget *parentBox, CallbackParam *data) {
     if (tempView != NULL) {
         g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayMatchDetail), (gpointer) data);
     }
+}
+
+void initNewsTreeView(GtkWidget *parentBox, CallbackParam *data){
+
+    GtkWidget *tempWidget = NULL;
+    AllTabParam * tabParam = (AllTabParam *) calloc(1, sizeof(AllTabParam));
+
+    tabParam->builder = data->builder;
+    tabParam->centralParam = data->mainParam;
+
+    tempWidget = (GtkWidget *) gtk_builder_get_object(data->builder, "newsSearchButton");
+
+    if(tempWidget != NULL)
+        g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(searchArticle), (gpointer *) tabParam);
 }
 
 int roundRobinAlgorithm(int numberOfTeam, int ****returnArray) {
@@ -656,7 +670,72 @@ void freeRoundRobinArray(int numberOfTeam, int ****arrayToFree) {
     *arrayToFree = NULL;
 }
 
+int insertMatch(int ***allMatch, char ***data, int nmb, int nRound, char *leagueId, GDate *startDateFirstPart, GDate *startDateSecondPart, PrepareStatement *exec) {
+    int i, j, l, k = 1, n, tmp = 0, m = 0, loopInitializer, loopEnd;
+    char tempChar[20];
+    char *pointerChar;
+    GString *statement;
+    GDate *tempDate;
 
+    /*
+     * Put the query to a gstring, to make easier manipulation
+     */
+    statement = g_string_new(exec->query);
+
+    for (n = 0; n < 2; ++n) {
+
+        if (n == 0) {
+            tempDate = startDateFirstPart;
+            loopInitializer = 0;
+            loopEnd = nRound;
+        } else {
+            tempDate = startDateSecondPart;
+            loopInitializer = nRound;
+            loopEnd = nRound * 2;
+        }
+
+        for (i = loopInitializer; i < loopEnd; i++) {
+            g_date_strftime(tempChar, 20, "%Y-%m-%d", tempDate);
+            pointerChar = g_strdup(tempChar);
+
+            for (j = 0; j < nmb / 2; j++) {
+
+                if (tmp == 1)
+                    statement = g_string_append(statement, ", ");
+                tmp = 1;
+
+                statement = g_string_append(statement, "(");
+                for (l = 0; l < 5; ++l) {
+                    if (l != 4) {
+                        g_string_append_printf(statement, "$%d,", k++);
+                    } else {
+                        g_string_append_printf(statement, "$%d", k++);
+                    }
+                }
+                statement = g_string_append(statement, ")");
+
+                bindParam(exec, data[allMatch[0][i][j]][0], m++);
+                bindParam(exec, data[allMatch[1][i][j]][0], m++);
+                bindParam(exec, pointerChar, m++);
+                bindParam(exec, leagueId, m++);
+                bindParam(exec, data[allMatch[0][i][j]][1], m++);
+            }
+
+            g_date_add_days(tempDate, 7);
+        }
+    }
+
+    exec->query = statement->str;
+
+
+    return k;
+
+}
+
+
+/*
+ * Curl function
+ */
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream) {
     size_t written = fwrite(ptr, size, nmemb, (FILE *) stream);
     return written;
@@ -738,9 +817,12 @@ int browser(char *sourcefile, char *research, char *url, long *cursorPosition, G
         return -1;
     }
 
+    research = g_utf8_strdown(research, -1);
+
     fseek(searchfile, *cursorPosition, SEEK_SET);
 
     while (fgets(search, 2000, searchfile) != NULL) {
+        strcpy(search, g_utf8_strdown(search, -1));
 
         res = strstr(search, research);
 
@@ -773,23 +855,26 @@ int browser(char *sourcefile, char *research, char *url, long *cursorPosition, G
             g_string_free(result, TRUE);
 
         }
-        fclose(searchfile);
 
-        return -1;
     }
+
+    fclose(searchfile);
+
+    return -1;
 
 }
 
-void getArticle(char *sourcefile) {
+void getArticle(char *sourcefile, char ** buffer, char ** title) {
     char *res;
     char *result;
     char *startP = NULL;
     char *endP = NULL;
+    char * divP = NULL;
     char *temp = NULL;
 
     FILE *searchfile;
     searchfile = fopen(sourcefile, "r");
-    char search[10000] = "";
+    char * search = (char *) malloc(10000 * sizeof(char));
     char *tempSearch = NULL;
     GString *article = g_string_new("");
     int draw = 0;
@@ -815,7 +900,8 @@ void getArticle(char *sourcefile) {
 
                 if ((temp = strchr(result, '<')) != NULL)
                     *temp = 0;
-                printf(" Title : %s\n", result);
+
+                *title = strdup(result);
             }
         }
 
@@ -831,122 +917,121 @@ void getArticle(char *sourcefile) {
             while (res != NULL || fgets(search, 10000, searchfile) != NULL) {
 
                 //article = g_string_erase(article,0,-1);
-                tempSearch = strdup(search);
+
 
 
                 res = NULL;
 
-                if ((endP = strstr(search, "</p>")) != NULL) {
-                    draw = 0;
-                    //printf("%s \n",endP);
-                }
+                do{
 
-                // Quand on trouve notre p write = 1
-                if ((startP = strstr(search, "<p>")) != NULL) {
-                    draw = 1;
-                }
+                    tempSearch = strdup(search);
 
-                // Quand on trouve notre p fermant write 0
-
-
-                if ((temp = strstr(search, "<div>")) != NULL) {
-                    numberOfDiv++;
-                }
-
-                //Quand on trouve la div fermante
-
-
-
-                if (endP != NULL) {
-                    *endP = 0;
-                    article = g_string_append(article, search);
-                }
-                if (startP != NULL) {
-                    article = g_string_append(article, startP + 3);
-                } else if (draw == 1) {
-                    article = g_string_append(article, search);
-                }
-
-                if ((temp = strstr(tempSearch, "</div>")) != NULL) {
-                    if (numberOfDiv == 0) {
-                        *temp = 0;
-                        fclose(searchfile);
-                        printf("%s\n", article->str);
-                        return;
-                    } else {
-                        numberOfDiv--;
+                    if ((endP = strstr(search, "</p>")) != NULL) {
+                        draw = 0;
                     }
-                }
-                g_free(tempSearch);
+
+                    // Quand on trouve notre p write = 1
+                    if ((startP = strstr(search, "<p>")) != NULL) {
+                        draw = 1;
+                    }
+
+                    // Quand on trouve notre p fermant write 0
+
+
+                    if ((temp = strstr(search, "<div>")) != NULL) {
+                        numberOfDiv++;
+                    }
+
+
+                    if(endP != NULL && startP!=NULL){
+
+                        if(startP > endP){
+                            *endP = 0;
+                            article = g_string_append(article, search);
+                            article = g_string_append(article, startP + 3);
+                            search += strlen(startP) - 1;
+
+                        }else if(endP > startP){
+                            *endP = 0;
+                            article = g_string_append(article, startP + 3);
+                            search = endP + 1;
+                        }
+
+                    }else if(endP != NULL && startP == NULL){
+                        *endP = 0;
+                        article = g_string_append(article, search);
+                        search = endP + 1;
+
+                    }else if(startP != NULL && endP == NULL){
+
+                        article = g_string_append(article, startP + 3);
+                        search += strlen(search) - 1;
+
+                    }else if (draw == 1) {
+                        article = g_string_append(article, search);
+                        search += strlen(search) - 1;
+                    }
+
+                    if ((divP = strstr(tempSearch, "</div>")) != NULL) {
+
+                        if (numberOfDiv == 0) {
+
+                            *divP = 0;
+                            *buffer = article->str;
+
+                            if(startP == NULL && endP == NULL){
+                                fclose(searchfile);
+                                return;
+                            }
+
+                        } else {
+                            numberOfDiv--;
+                            search = divP + 1;
+                        }
+                    }
+                    g_free(tempSearch);
+
+                }while(startP != NULL || endP != NULL || divP != NULL);
 
             }
 
         }
-
 
     }
     fclose(searchfile);
 }
 
-int insertMatch(int ***allMatch, char ***data, int nmb, int nRound, char *leagueId, GDate *startDateFirstPart,
-                GDate *startDateSecondPart, PrepareStatement *exec) {
-    int i, j, l, k = 1, n, tmp = 0, m = 0, loopInitializer, loopEnd;
-    char tempChar[20];
-    char *pointerChar;
-    GString *statement;
-    GDate *tempDate;
+void clearHTMLData(char ** buffer){
+    GString * tempString = g_string_new(*buffer);
+    char * tempChar = tempString->str;
+    char * test = strdup(tempString->str);
+    char * startChar = NULL;
+    char * endChar = NULL;
 
-    /*
-     * Put the query to a gstring, to make easier manipulation
-     */
-    statement = g_string_new(exec->query);
+    do{
+        startChar = strchr(tempString->str, '<');
+        endChar = strchr(tempString->str, '>');
 
-    for (n = 0; n < 2; ++n) {
-
-        if (n == 0) {
-            tempDate = startDateFirstPart;
-            loopInitializer = 0;
-            loopEnd = nRound;
-        } else {
-            tempDate = startDateSecondPart;
-            loopInitializer = nRound;
-            loopEnd = nRound * 2;
-        }
-
-        for (i = loopInitializer; i < loopEnd; i++) {
-            g_date_strftime(tempChar, 20, "%Y-%m-%d", tempDate);
-            pointerChar = g_strdup(tempChar);
-
-            for (j = 0; j < nmb / 2; j++) {
-
-                if (tmp == 1)
-                    statement = g_string_append(statement, ", ");
-                tmp = 1;
-
-                statement = g_string_append(statement, "(");
-                for (l = 0; l < 5; ++l) {
-                    if (l != 4) {
-                        g_string_append_printf(statement, "$%d,", k++);
-                    } else {
-                        g_string_append_printf(statement, "$%d", k++);
-                    }
-                }
-                statement = g_string_append(statement, ")");
-
-                bindParam(exec, data[allMatch[0][i][j]][0], m++);
-                bindParam(exec, data[allMatch[1][i][j]][0], m++);
-                bindParam(exec, pointerChar, m++);
-                bindParam(exec, leagueId, m++);
-                bindParam(exec, data[allMatch[0][i][j]][1], m++);
+        if(startChar != NULL && endChar != NULL){
+            if(endChar < startChar){
+                tempString = g_string_erase(tempString, (gssize) (endChar - tempString->str), 1);
+            }else{
+                tempString = g_string_erase(tempString, (gssize) (startChar - tempString->str), (gssize) (endChar - startChar + 1));
             }
-
-            g_date_add_days(tempDate, 7);
         }
+
+        if(startChar != NULL && endChar == NULL)
+            tempString = g_string_erase(tempString, (gssize) (startChar - tempString->str), -1);
+
+
+    }while(startChar != NULL || endChar != NULL);
+
+    if(*buffer != NULL){
+        *buffer = tempString->str;
     }
 
-    exec->query = statement->str;
 
+    g_string_free(tempString, FALSE);
 
-    return k;
 
 }
