@@ -1398,6 +1398,7 @@ void displayMatchDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewCol
     }
 }
 
+
 void searchArticle(GtkWidget *widget, gpointer *data){
     AllTabParam * mainParam = (AllTabParam *) data;
     GtkWidget * listStore = NULL;
@@ -2220,9 +2221,11 @@ void displayNewsDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColu
 
                 tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailUrlValue");
 
-                if (tempWidget != NULL)
-                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
-
+                if (tempWidget != NULL){
+                    printf("ok");
+                    gtk_button_set_label(GTK_BUTTON(tempWidget), "Go to article");
+                    gtk_link_button_set_uri(GTK_LINK_BUTTON(tempWidget), finalData[1]);
+                }
 
                 tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailContentValue");
 
