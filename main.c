@@ -14,6 +14,20 @@ int main(int argc,char **argv) {
     DatabaseConnector * mainDatabaseConnector = NULL;
     gtk_init(&argc, &argv);
 
+    long cursor = 0;
+    int temp;
+    GList * existHref = NULL;
+
+
+    getHtml("testx.html","http://www.footmercato.net");
+
+    getURL("testx.html","hrefs.html");
+
+
+    while((temp = browser("hrefs.html","psg","http://www.footmercato.net/",&cursor,&existHref)) == 0){
+        getArticle("article.html");
+        printf("\n");
+    }
 
     mainWindowBuilder = gtk_builder_new();
 
@@ -109,6 +123,11 @@ int main(int argc,char **argv) {
          * Free the GList of button
          */
         g_list_free(allNotebookParam);
+
+
+
+
+
 
         endConnectionToDatabase(mainDatabaseConnector);
 
