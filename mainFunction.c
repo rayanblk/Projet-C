@@ -271,14 +271,14 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data){
         mainParam->mainParam = data->mainParam;
         strcpy(mainParam->statement,
                "SELECT"
-                "    \"Team\".id,"
-                "    \"Team\".name,"
-                "    \"Team\".city,"
-                "    \"League\".Name AS \"leagueName\","
-                "    \"Team\".stadium,"
-                "    to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
-                "FROM \"Team\""
-                "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id");
+                       "    \"Team\".id,"
+                       "    \"Team\".name,"
+                       "    \"Team\".city,"
+                       "    \"League\".Name AS \"leagueName\","
+                       "    \"Team\".stadium,"
+                       "    to_char(\"Team\".\"dateUpdate\", 'YYYY-MM-DD') AS \"dateUpdate\""
+                       "FROM \"Team\""
+                       "JOIN \"League\" ON \"Team\".\"idLeague\" = \"League\".id");
         mainParam->numberOfParam = 4;
         strcpy(mainParam->listStoreId, "teamListStore");
 
@@ -424,7 +424,7 @@ void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data){
         if(tempView != NULL)
             g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayPlayerDetail), (gpointer) data);
 
-       }
+    }
 
 }
 
@@ -536,12 +536,250 @@ void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data){
 
 
 
+    }
+
+    tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "matchTreeView");
+
+    if (tempView != NULL) {
+        g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayPlayerDetail), (gpointer) data);
+    }
+
+}
+
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+    size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
+    return written;
+}
+
+void getHtml (char * file  ,char * url ){
+
+    CURL *curl_handle;
+    FILE *bodyfile;
+
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl_handle = curl_easy_init();
+
+
+    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+    curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+
+
+    bodyfile = fopen(file, "wb");
+
+    if(!bodyfile) {
+        curl_easy_cleanup(curl_handle);
+    }
+
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, bodyfile);
+    curl_easy_perform(curl_handle);
+    fclose(bodyfile);
+    curl_easy_cleanup(curl_handle);
+
+
+}
+
+void getURL (char * sourcefile , char * hreffile){
+    FILE *bodyfile;
+    FILE *href;
+
+    bodyfile = fopen(sourcefile, "r");
+
+    char chaine[2000] = "";
+    char * res;
+    char * result;
+    char * temp;
+
+
+
+    href = fopen(hreffile, "w+");
+
+    if (bodyfile != NULL)
+    {
+        while (fgets(chaine, 2000, bodyfile) != NULL)
+        {
+            res = strstr(chaine, "href");
+
+            if(res != NULL){
+                if((temp = strchr(res,'"')) != NULL)
+                    result = temp + 1;
+
+                if((temp = strchr(result,'"')) != NULL)
+                    *temp = 0;
+
+                fprintf(href,"%s\n",result);
+            }
+        }
+        fclose(href);
+        fclose(bodyfile);
+    }
+}
+
+int browser (char * sourcefile , char * research , char * url, long * cursorPosition, GList ** existHref){
+    char * res;
+    char * http;
+    GString * result;
+    FILE *searchfile;
+    searchfile = fopen(sourcefile,"r");
+    char search[2000] ="";
+    GList * temp = NULL;
+    int condition = 0;
+
+    if(searchfile == NULL){
+        printf("Please verify your source file");
+        return -1;
+    }
+
+    fseek(searchfile, *cursorPosition, SEEK_SET);
+
+    while(fgets(search,2000,searchfile) != NULL){
+
+        res = strstr(search,research);
+
+        search[strlen(search) - 1] = 0;
+
+        if(res != NULL){
+            http = strstr(search,"http");
+            result = g_string_new(search);
+
+            if(http == NULL) {
+                condition = 0;
+                result = g_string_prepend(result, url);
+                for(temp = *existHref; temp != NULL ; temp = temp->next){
+                    if(strcmp((char *)temp->data,result->str) == 0){
+                        condition = 1;
+                        break;
+                    }
+                }
+                if(condition == 0) {
+                    getHtml("article.html", result->str);
+                    *cursorPosition = ftell(searchfile);
+                    fclose(searchfile);
+                    *existHref = g_list_prepend(*existHref,(gpointer *)result->str);
+                    return 0;
+                }
+
+            }
+
+
+            g_string_free (result,TRUE);
         }
 
-        tempView = (GtkTreeView *) gtk_builder_get_object(data->builder, "matchTreeView");
-
-        if (tempView != NULL) {
-            g_signal_connect(G_OBJECT(tempView), "row-activated", G_CALLBACK(displayPlayerDetail), (gpointer) data);
-        }
 
     }
+    fclose(searchfile);
+
+    return -1;
+}
+
+void getArticle (char * sourcefile){
+    char * res;
+    char * result;
+    char * startP = NULL;
+    char * endP = NULL;
+    char * temp = NULL;
+
+    FILE *searchfile;
+    searchfile = fopen(sourcefile,"r");
+    char search[10000] ="";
+    char * tempSearch = NULL;
+    GString * article = g_string_new("");
+    int draw = 0;
+    int numberOfDiv = 0;
+
+
+    if(searchfile == NULL){
+        printf("Please verify your source file");
+    }
+
+    if(searchfile != NULL){
+
+
+        while(fgets(search,10000,searchfile) != NULL){
+
+            res = strstr(search,"<h1 itemprop=\"headline\"");
+
+            //search[strlen(search) - 1] = 0;
+
+            if(res != NULL){
+                if((temp = strchr(res,'>')) != NULL)
+                    result = temp + 1;
+
+                if((temp = strchr(result,'<')) != NULL)
+                    *temp = 0;
+                printf(" Title : %s\n",result);
+            }
+        }
+
+        fseek(searchfile,0,SEEK_SET);
+
+
+
+        while(((res = strstr(search,"class=\"line article-text\" itemprop=\"articleBody\">")) == NULL) && fgets(search,2000,searchfile) != NULL);
+
+
+
+        if(res != NULL){
+
+            while(res != NULL || fgets(search,10000,searchfile) != NULL){
+
+                //article = g_string_erase(article,0,-1);
+                tempSearch = strdup(search);
+
+
+                res = NULL;
+
+                if ((endP = strstr(search, "</p>")) != NULL){
+                    draw = 0;
+                    //printf("%s \n",endP);
+                }
+
+                // Quand on trouve notre p write = 1
+                if ((startP = strstr(search, "<p>")) != NULL){
+                    draw = 1;
+                }
+
+                // Quand on trouve notre p fermant write 0
+
+
+                if ((temp = strstr(search, "<div>")) != NULL){
+                    numberOfDiv++;
+                }
+
+                //Quand on trouve la div fermante
+
+
+
+                if(endP != NULL){
+                    *endP = 0;
+                    article = g_string_append(article,search);
+                }
+                if(startP != NULL){
+                    article = g_string_append(article, startP + 3);
+                }
+                else if(draw == 1){
+                    article = g_string_append(article, search);
+                }
+
+                if ((temp = strstr(tempSearch, "</div>")) != NULL){
+                    if(numberOfDiv == 0){
+                        *temp = 0;
+                        fclose(searchfile);
+                        printf("%s\n",article->str);
+                        return;
+                    }else{
+                        numberOfDiv--;
+                    }
+                }
+                g_free(tempSearch);
+
+            }
+
+        }
+
+
+
+    }
+    fclose(searchfile);
+}

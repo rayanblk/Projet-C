@@ -11,6 +11,7 @@
 #include <libpq-fe.h>
 #include "structure.h"
 #include "callback.h"
+#include <curl/curl.h>
 
 GError * loadGladeFile(GtkBuilder ** builder, char *fileName);
 
@@ -25,5 +26,15 @@ void initTeamTreeView(GtkWidget * parentBox, CallbackParam * data);
 void initPlayerTreeView(GtkWidget * parentBox, CallbackParam * data);
 
 void initMatchTreeView(GtkWidget * parentBox, CallbackParam * data);
+
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
+
+void getHtml (char * file  ,char * url );
+
+void getURL (char * sourcefile , char * hreffile);
+
+int browser (char * sourcefile , char * research , char * url, long * cursorPosition, GList ** existHref);
+
+void getArticle (char * sourcefile);
 
 #endif //PROJET_C_MAINFUNCTION_H
