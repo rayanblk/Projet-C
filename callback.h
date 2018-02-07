@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 #include "structure.h"
 #include "mainFunction.h"
+#include "generic.h"
 
 #ifndef PROJET_C_CALLBACK_H
 #define PROJET_C_CALLBACK_H
@@ -23,6 +24,8 @@ void openAddNewLeagueForm(GtkWidget * widget, gpointer * data);
 
 void openAddNewTeamForm(GtkWidget * widget, gpointer * data);
 
+void openAddNewStrikerForm(GtkWidget *widget, gpointer *data);
+
 
 void closeDialogBox(GtkWidget * widget,gpointer * data);
 
@@ -36,11 +39,15 @@ void displayTeamDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewC
 
 void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
 
+void displayMatchDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
+
 void openAddNewPlayerForm(GtkWidget * widget, gpointer * data);
 
 void createNewTeam (GtkWidget * widget, gpointer * data);
 
 void createNewPlayer (GtkWidget * widget, gpointer * data);
+
+void createNewStriker (GtkWidget * widget, gpointer * data);
 
 void openMoreDetailLeague(GtkWidget * widget, gpointer * data);
 
@@ -50,5 +57,7 @@ void openCalendar(GtkEntry * widget, GtkEntryIconPosition iconPos, GdkEvent *eve
 void daySelect(GtkCalendar * calendar, gpointer * data);
 
 void newLeagueMatch(GtkWidget * widget, gpointer * data);
+
+void updateStatusMatch(GtkWidget *widget, gpointer *data);
 
 #endif //PROJET_C_CALLBACK_H

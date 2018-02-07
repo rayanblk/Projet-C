@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
-#include <curl/curl.h>
 #include "database.h"
 #include "callback.h"
 
@@ -146,3 +145,4 @@ int main(int argc,char **argv) {
         return 0;
     }
 }
+

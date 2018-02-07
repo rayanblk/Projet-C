@@ -37,4 +37,11 @@ int browser (char * sourcefile , char * research , char * url, long * cursorPosi
 
 void getArticle (char * sourcefile);
 
+int roundRobinAlgorithm(int numberOfTeam, int **** returnArray);
+
+void freeRoundRobinArray(int numberOfTeam, int **** arrayToFree);
+
+int insertMatch(int *** allMatch, char *** data, int nmb, int nRound, char * leagueId, GDate * startDateFirstPart, GDate * startDateSecondPart, PrepareStatement * exec);
+
+
 #endif //PROJET_C_MAINFUNCTION_H
