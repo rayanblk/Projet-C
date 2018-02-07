@@ -58,4 +58,6 @@ void daySelect(GtkCalendar * calendar, gpointer * data);
 
 void newLeagueMatch(GtkWidget * widget, gpointer * data);
 
+void updateStatusMatch(GtkWidget *widget, gpointer *data);
+
 #endif //PROJET_C_CALLBACK_H
