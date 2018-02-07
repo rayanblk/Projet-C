@@ -39,6 +39,8 @@ void displayTeamDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewC
 
 void displayPlayerDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
 
+void displayNewsDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
+
 void displayMatchDetail(GtkTreeView  * treeView, GtkTreePath * path, GtkTreeViewColumn * column, gpointer * data);
 
 void openAddNewPlayerForm(GtkWidget * widget, gpointer * data);

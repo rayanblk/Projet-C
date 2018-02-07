@@ -1480,7 +1480,6 @@ void searchArticle(GtkWidget *widget, gpointer *data){
             bindParam(query, buffer, i + 1);
             i+= 3;
         }
-
     }
     if(i > 1){
 
@@ -2172,5 +2171,90 @@ void updateStatusMatch(GtkWidget *widget, gpointer *data){
 
     closePrepareStatement(query,resultQuery,NULL);
 
+
+}
+
+void displayNewsDetail(GtkTreeView *treeView, GtkTreePath *path, GtkTreeViewColumn *column, gpointer *data) {
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    char *test;
+    CallbackParam *allParam = (CallbackParam *) data;
+    GError *error = NULL;
+    GtkWidget *window = NULL;
+    GtkWidget *tempWidget = NULL;
+    PrepareStatement *query = NULL;
+    QueryStatement *resultQuery = NULL;
+    char **finalData = NULL;
+
+    model = gtk_tree_view_get_model(treeView);
+    gtk_tree_model_get_iter(model, &iter, path);
+
+
+/*
+ * Get the dialog box
+ * Display the value
+ */
+    if ((error = loadGladeFile(&allParam->builder, "detailWidget/newsDetail.glade")) == NULL) {
+
+        window = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailWindow");
+
+
+        if (window != NULL) {
+
+            gtk_widget_show_all(window);
+            tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailIdValue");
+            gtk_tree_model_get(model, &iter, 0, &test, -1);
+            if (tempWidget != NULL)
+                gtk_label_set_label(GTK_LABEL(tempWidget), test);
+
+            query = prepareQuery(allParam->mainParam->databaseInfo,
+                                 "select id,url,content,\"dateAdd\",\"dateUpdate\" FROM \"Article\" where id = $1");
+
+            bindParam(query, test, 0);
+
+            resultQuery = executePrepareStatement(query);
+
+            if (resultQuery->error != 1) {
+
+                fetchResult(resultQuery, &finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailUrlValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[1]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailContentValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[2]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailDateAddValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[3]);
+
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailDateUpdateValue");
+
+                if (tempWidget != NULL)
+                    gtk_label_set_label(GTK_LABEL(tempWidget), finalData[4]);
+
+
+                closePrepareStatement(query, resultQuery, (char ***) finalData);
+
+                tempWidget = (GtkWidget *) gtk_builder_get_object(allParam->builder, "newsDetailCloseButton");
+
+                if (tempWidget != NULL)
+                    g_signal_connect(G_OBJECT(tempWidget), "clicked", G_CALLBACK(closeDialogBox), (gpointer) window);
+
+            }
+        }
+
+    } else {
+        printf("%s \n", error->message);
+        g_error_free(error);
+    }
 
 }
